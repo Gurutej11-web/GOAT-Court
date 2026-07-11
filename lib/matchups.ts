@@ -1,53 +1,65 @@
 import type { Matchup } from "./types";
 
-export interface SportEntry {
-  sport: string;
-  athletes: string[];
+export interface Athlete {
+  name: string;
+  image: string;
 }
 
-/**
- * The full database. Only these sports and these athletes can be picked —
- * there's no free-text entry, so every matchup is guaranteed to make sense.
- */
+export interface SportEntry {
+  sport: string;
+  athletes: Athlete[];
+}
+
+/** The curated database — each player here has a real photo and real stats. */
 export const SPORTS: SportEntry[] = [
   {
     sport: "Basketball",
     athletes: [
-      "Michael Jordan",
-      "LeBron James",
-      "Kobe Bryant",
-      "Magic Johnson",
-      "Larry Bird",
-      "Kareem Abdul-Jabbar",
+      { name: "Michael Jordan", image: "https://upload.wikimedia.org/wikipedia/commons/a/ae/Michael_Jordan_in_2014.jpg" },
+      { name: "LeBron James", image: "https://upload.wikimedia.org/wikipedia/commons/7/7a/LeBron_James_%2851959977144%29_%28cropped2%29.jpg" },
+      { name: "Kobe Bryant", image: "https://upload.wikimedia.org/wikipedia/commons/3/36/Kobe_Bryant_Dec_2014.jpg" },
+      { name: "Magic Johnson", image: "https://upload.wikimedia.org/wikipedia/commons/2/29/Magic_Johnson_at_SXSW_2022_%2851958828669%29_%28cropped%29.jpg" },
+      { name: "Larry Bird", image: "https://upload.wikimedia.org/wikipedia/commons/b/bb/Larrybird.jpg" },
+      { name: "Kareem Abdul-Jabbar", image: "https://upload.wikimedia.org/wikipedia/commons/a/a0/Kareem_Abdul-Jabbar_May_2014.jpg" },
     ],
   },
   {
     sport: "Soccer",
     athletes: [
-      "Lionel Messi",
-      "Cristiano Ronaldo",
-      "Pelé",
-      "Diego Maradona",
-      "Zinedine Zidane",
+      { name: "Lionel Messi", image: "https://upload.wikimedia.org/wikipedia/commons/2/27/Lionel_Messi_NE_Revolution_Inter_Miami_7.9.25-178.jpg" },
+      { name: "Cristiano Ronaldo", image: "https://upload.wikimedia.org/wikipedia/commons/6/67/Cristiano_Ronaldo_2275_%28cropped%29.jpg" },
+      { name: "Pelé", image: "https://upload.wikimedia.org/wikipedia/commons/5/5e/Pele_con_brasil_%28cropped%29.jpg" },
+      { name: "Diego Maradona", image: "https://upload.wikimedia.org/wikipedia/commons/4/48/Argentina_celebrando_copa_%28cropped%29.jpg" },
+      { name: "Zinedine Zidane", image: "https://upload.wikimedia.org/wikipedia/commons/f/f3/Zinedine_Zidane_by_Tasnim_03.jpg" },
     ],
   },
   {
     sport: "Tennis",
     athletes: [
-      "Roger Federer",
-      "Rafael Nadal",
-      "Novak Djokovic",
-      "Serena Williams",
-      "Steffi Graf",
+      { name: "Roger Federer", image: "https://upload.wikimedia.org/wikipedia/commons/1/11/Roger_Federer_2015_%28cropped%29.jpg" },
+      { name: "Rafael Nadal", image: "https://upload.wikimedia.org/wikipedia/commons/7/71/Rafael_Nadal_en_2024_%28cropped%29.jpg" },
+      { name: "Novak Djokovic", image: "https://upload.wikimedia.org/wikipedia/commons/d/d1/Novak_Djokovic_Paris_2024_Olympic_Games_%28cropped%29.jpg" },
+      { name: "Serena Williams", image: "https://upload.wikimedia.org/wikipedia/commons/2/2f/Guests_at_the_2026_Met_Gala_209_%28cropped%29.jpg" },
+      { name: "Steffi Graf", image: "https://upload.wikimedia.org/wikipedia/commons/f/f0/Steffi_Graf_in_Hamburg_2010_%28cropped%29.jpg" },
     ],
   },
   {
     sport: "American Football",
-    athletes: ["Tom Brady", "Peyton Manning", "Patrick Mahomes", "Jerry Rice"],
+    athletes: [
+      { name: "Tom Brady", image: "https://upload.wikimedia.org/wikipedia/commons/7/73/25th_Laureus_World_Sports_Awards_-_Red_Carpet_-_Tom_Brady_-_240422_191334_%28cropped%29_%28cropped%29.jpg" },
+      { name: "Peyton Manning", image: "https://upload.wikimedia.org/wikipedia/commons/2/2e/Peyton_Manning_%2851665689271%29.jpg" },
+      { name: "Patrick Mahomes", image: "https://upload.wikimedia.org/wikipedia/commons/9/92/Patrick_Mahomes_%2851615475056%29.jpg" },
+      { name: "Jerry Rice", image: "https://upload.wikimedia.org/wikipedia/commons/0/01/Super_Bowl_44_Miami_Florida_NFL_Network_South_Beach_Set_Deon_Sanders_interviews_Jerry_Rice_%284331549867%29_%28cropped%29_-_Jerry_Rice.jpg" },
+    ],
   },
   {
     sport: "Boxing",
-    athletes: ["Muhammad Ali", "Mike Tyson", "Floyd Mayweather", "Manny Pacquiao"],
+    athletes: [
+      { name: "Muhammad Ali", image: "https://upload.wikimedia.org/wikipedia/commons/8/89/Muhammad_Ali_NYWTS.jpg" },
+      { name: "Mike Tyson", image: "https://upload.wikimedia.org/wikipedia/commons/e/ee/Mike_Tyson_Photo_Op_GalaxyCon_Austin_2023.jpg" },
+      { name: "Floyd Mayweather", image: "https://upload.wikimedia.org/wikipedia/commons/d/d9/Floyd_Mayweather_Jr_2011.jpg" },
+      { name: "Manny Pacquiao", image: "https://upload.wikimedia.org/wikipedia/commons/6/69/Former_senator_Manny_Pacquiao_speaks_in_event_%2810-01-2025%29_%28cropped%29.jpg" },
+    ],
   },
 ];
 
@@ -63,12 +75,17 @@ export const FEATURED: Matchup[] = [
   { sport: "Tennis", a: "Serena Williams", b: "Steffi Graf" },
 ];
 
-export function athletesFor(sport: string): string[] {
+export function athletesFor(sport: string): Athlete[] {
   return SPORTS.find((s) => s.sport === sport)?.athletes ?? [];
 }
 
-export function isKnownAthlete(sport: string, athlete: string): boolean {
-  return athletesFor(sport).includes(athlete);
+export function athleteNamesFor(sport: string): string[] {
+  return athletesFor(sport).map((a) => a.name);
+}
+
+/** Looks up a known player's photo. Returns null for custom/typed-in players. */
+export function imageFor(sport: string, name: string): string | null {
+  return athletesFor(sport).find((a) => a.name === name)?.image ?? null;
 }
 
 export function randomMatchup(): Matchup {

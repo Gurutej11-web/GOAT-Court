@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CaseSetup from "@/components/CaseSetup";
 import Courtroom from "@/components/Courtroom";
 import VerdictScene from "@/components/VerdictScene";
@@ -8,6 +8,35 @@ import type { CaseConfig, Phase, TranscriptEntry, Verdict } from "@/lib/types";
 import { PHASES } from "@/lib/types";
 
 type FailedStage = "counsel" | "judge" | null;
+
+const STORAGE_KEY = "goat-court-save-v1";
+
+interface SavedState {
+  caseConfig: CaseConfig;
+  transcript: TranscriptEntry[];
+  phaseIndex: number;
+  verdict: Verdict | null;
+}
+
+function loadSaved(): SavedState | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as SavedState) : null;
+  } catch {
+    return null;
+  }
+}
+
+function persist(state: SavedState | null) {
+  if (typeof window === "undefined") return;
+  try {
+    if (state) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    else window.localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // storage unavailable — nothing to do
+  }
+}
 
 export default function GoatCourt({ live }: { live: boolean }) {
   const [caseConfig, setCaseConfig] = useState<CaseConfig | null>(null);
@@ -19,8 +48,30 @@ export default function GoatCourt({ live }: { live: boolean }) {
   const [verdict, setVerdict] = useState<Verdict | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [failedStage, setFailedStage] = useState<FailedStage>(null);
+  const [savedAvailable, setSavedAvailable] = useState(false);
 
   const phase: Phase = PHASES[Math.min(phaseIndex, PHASES.length - 1)];
+
+  // A debate from a previous visit is resumable if it was saved.
+  useEffect(() => {
+    setSavedAvailable(Boolean(loadSaved()));
+  }, []);
+
+  // Keep the active debate saved as it progresses.
+  useEffect(() => {
+    if (!caseConfig) return;
+    persist({ caseConfig, transcript, phaseIndex, verdict });
+  }, [caseConfig, transcript, phaseIndex, verdict]);
+
+  function resumeSaved() {
+    const saved = loadSaved();
+    if (!saved) return;
+    setCaseConfig(saved.caseConfig);
+    setTranscript(saved.transcript);
+    setPhaseIndex(saved.phaseIndex);
+    setVerdict(saved.verdict);
+    setSavedAvailable(false);
+  }
 
   async function runCounsel(c: CaseConfig, t: TranscriptEntry[], p: Phase) {
     setError(null);
@@ -35,7 +86,7 @@ export default function GoatCourt({ live }: { live: boolean }) {
       });
       if (!res.ok || !res.body) {
         const detail = await res.json().catch(() => null);
-        throw new Error(detail?.error ?? "Opposing counsel failed to appear.");
+        throw new Error(detail?.error ?? "The AI debater failed to respond.");
       }
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
@@ -46,7 +97,7 @@ export default function GoatCourt({ live }: { live: boolean }) {
         full += decoder.decode(value, { stream: true });
         setAiDraft(full);
       }
-      if (!full.trim()) throw new Error("Opposing counsel went silent mid-argument.");
+      if (!full.trim()) throw new Error("The AI debater went silent mid-argument.");
 
       const withAi: TranscriptEntry[] = [
         ...t,
@@ -70,7 +121,7 @@ export default function GoatCourt({ live }: { live: boolean }) {
       setError(
         err instanceof Error && err.message
           ? err.message
-          : "Opposing counsel failed to appear. Check your connection and retry.",
+          : "The AI debater failed to respond. Check your connection and retry.",
       );
     }
   }
@@ -136,10 +187,25 @@ export default function GoatCourt({ live }: { live: boolean }) {
   function newCase() {
     resetTrial();
     setCaseConfig(null);
+    persist(null);
+    setSavedAvailable(false);
+  }
+
+  function backToSetup() {
+    // Progress is already auto-saved, so this just parks the debate for later.
+    setCaseConfig(null);
+    setSavedAvailable(true);
   }
 
   if (!caseConfig) {
-    return <CaseSetup live={live} onStart={setCaseConfig} />;
+    return (
+      <CaseSetup
+        live={live}
+        savedAvailable={savedAvailable}
+        onStart={setCaseConfig}
+        onResume={resumeSaved}
+      />
+    );
   }
 
   if (verdict) {
@@ -166,6 +232,7 @@ export default function GoatCourt({ live }: { live: boolean }) {
       live={live}
       onSubmit={submitArgument}
       onRetry={retry}
+      onBack={backToSetup}
     />
   );
 }

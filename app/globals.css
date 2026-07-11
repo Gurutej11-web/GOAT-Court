@@ -22,11 +22,6 @@ body {
   background: var(--color-ink);
   color: var(--color-text);
   font-family: var(--font-sans);
-  /* soft purple glow above, cyan glow below */
-  background-image:
-    radial-gradient(ellipse 90% 60% at 50% -10%, rgba(139, 92, 246, 0.16), transparent),
-    radial-gradient(ellipse 120% 90% at 50% 110%, rgba(34, 211, 238, 0.08), transparent);
-  background-attachment: fixed;
   min-height: 100dvh;
 }
 
@@ -47,6 +42,12 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 .animate-rise { animation: rise-in 0.45s ease-out both; }
+
+@keyframes screen-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.995); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-screen { animation: screen-in 0.4s ease-out both; }
 
 @keyframes trophy-drop {
   0% { transform: scale(0.5) translateY(-10px) rotate(-10deg); opacity: 0; }
