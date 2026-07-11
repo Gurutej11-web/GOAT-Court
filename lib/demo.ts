@@ -78,3 +78,23 @@ export function demoVerdict(c: CaseConfig, transcript: TranscriptEntry[]): Verdi
       "The results speak for themselves.",
   };
 }
+
+/** Demo odds: a stable pseudo-random split seeded by the two names, so it's consistent per matchup. */
+export function demoOdds(a: string, b: string): { aPct: number; bPct: number; blurb: string } {
+  let seed = 0;
+  for (const ch of `${a}${b}`) seed = (seed * 31 + ch.charCodeAt(0)) % 1000;
+  const aPct = 35 + (seed % 31); // keeps it in a believable 35-65 band
+  return {
+    aPct,
+    bPct: 100 - aPct,
+    blurb: `Public opinion usually leans toward whoever's got the hardware and the highlight reel to match. (Demo mode: add a GROQ_API_KEY for a live estimate.)`,
+  };
+}
+
+export function demoCoachTip(): string {
+  return "Looking solid. Try naming one specific stat or record instead of speaking in generalities, judges love a hard number. (Demo mode: add a GROQ_API_KEY for live coaching.)";
+}
+
+export function demoHint(athlete: string): string {
+  return `Try leaning on ${athlete}'s best-known accolade, championships, MVPs, or a signature record, whichever is hardest to argue against. (Demo mode: add a GROQ_API_KEY for a live hint.)`;
+}

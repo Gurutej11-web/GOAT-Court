@@ -1,4 +1,4 @@
-import type { CaseConfig, DebateStyle, Phase, TranscriptEntry } from "./types";
+import type { CaseConfig, DebateStyle, JudgeStyle, Phase, TranscriptEntry } from "./types";
 import { PHASE_LABELS } from "./types";
 
 export const MODEL = process.env.GOAT_MODEL || "llama-3.3-70b-versatile";
@@ -10,6 +10,15 @@ const STYLE_TONE: Record<DebateStyle, string> = {
     "No mercy. Aggressive and cutting toward the other side's ARGUMENT (never toward the other debater personally). Dismantle weak points hard.",
   stats:
     "A stats-obsessed nerd. Lean even harder into numbers than usual, treat this like a spreadsheet argument, cite more specific figures.",
+};
+
+const JUDGE_TONE: Record<JudgeStyle, string> = {
+  strict:
+    "You're a tough grader. High bar for what counts as a strong argument. Vague claims or thin evidence should score low, even if delivered confidently.",
+  generous:
+    "You reward effort and heart. A well-intentioned argument with a couple of real stats should score reasonably well, even if it's not airtight.",
+  statistical:
+    "You care almost entirely about the density and accuracy of real statistics cited. Rhetorical flair barely matters; count the receipts.",
 };
 
 function sideLabels(c: CaseConfig): { user: string; ai: string } {
@@ -63,6 +72,8 @@ export function judgeSystem(c: CaseConfig): string {
   const labels = sideLabels(c);
   return `You're the AI judge for GOAT Court. The debate: who's the greatest ${c.sport} player ever, ${c.userAthlete} (argued by ${labels.user}) or ${c.aiAthlete} (argued by ${labels.ai})?
 
+Judging temperament: ${JUDGE_TONE[c.judgeStyle] ?? JUDGE_TONE.strict}
+
 Read the full debate below and score it. Respond with ONLY a JSON object, no other text, shaped exactly like this:
 {
   "winner": "user" or "ai",
@@ -76,7 +87,7 @@ Read the full debate below and score it. Respond with ONLY a JSON object, no oth
 }
 
 Rules:
-- Score each round for BOTH sides 1-10, weighing real stats used, logical strength, and how persuasive it was.
+- Score each round for BOTH sides 1-10, weighing real stats used, logical strength, and how persuasive it was, filtered through your judging temperament above.
 - Judge the arguments as made in this debate, not your personal opinion of the athletes. ${labels.user} wins rounds by arguing well with real evidence; don't automatically favor ${labels.ai}, and don't give ${labels.user} a free pass for weak, evidence-free arguments.
 - "winner" must be whoever has the higher total across all three rounds. No ties: if the totals are level, adjust one round's score based on evidence quality to break it.
 - Keep the "phase" values exactly as shown above.
@@ -92,4 +103,53 @@ export function judgeUserMessage(
 ${formatTranscript(c, transcript)}
 
 The debate is closed. Deliver your verdict as the JSON object described.`;
+}
+
+export function oddsSystem(): string {
+  return `You're a sports-debate oddsmaker for GOAT Court. Given a matchup, estimate a rough public-opinion split for who'd usually be argued as the greatest, based on real career achievements. This is a pre-debate flavor prediction, not the actual verdict.
+
+Respond with ONLY a JSON object, no other text:
+{
+  "aPct": <integer 1-99, the % leaning toward the first player>,
+  "bPct": <integer, 100 - aPct>,
+  "blurb": "<one punchy sentence on why public opinion leans that way, no em dashes>"
+}`;
+}
+
+export function oddsUserMessage(sport: string, a: string, b: string): string {
+  return `Sport: ${sport}. Matchup: ${a} vs ${b}. Give the odds JSON.`;
+}
+
+export function coachSystem(): string {
+  return `You're a sharp debate coach for GOAT Court, a sports-GOAT debate app. The user will show you a draft argument they're about to submit. Give ONE short, punchy tip (max 2 sentences) on how to make it stronger, e.g. "add a specific stat," "attack their weakest point directly," "that's vague, name a number." Be encouraging but honest. No em dashes, no markdown, plain text only. If the draft is already strong, say so briefly and suggest one way to make it even sharper.`;
+}
+
+export function coachUserMessage(
+  c: CaseConfig,
+  phase: Phase,
+  draft: string,
+): string {
+  return `Sport: ${c.sport}. Arguing that ${c.userAthlete} is the GOAT over ${c.aiAthlete}, in the "${PHASE_LABELS[phase]}" round.
+
+Draft argument:
+"${draft}"
+
+Give your one tip.`;
+}
+
+export function hintSystem(): string {
+  return `You're a debate assistant for GOAT Court, a sports-GOAT debate app. The user is stuck and wants a quick angle to argue, not a full argument. Give ONE short suggestion (max 2 sentences): a specific real stat, record, or angle they could use. Never invent a statistic, if unsure of an exact number, suggest a real, well-known angle instead. No em dashes, no markdown, plain text only.`;
+}
+
+export function hintUserMessage(
+  c: CaseConfig,
+  transcript: TranscriptEntry[],
+  phase: Phase,
+): string {
+  return `Sport: ${c.sport}. Arguing that ${c.userAthlete} is the GOAT over ${c.aiAthlete}, in the "${PHASE_LABELS[phase]}" round.
+
+DEBATE SO FAR:
+${formatTranscript(c, transcript)}
+
+Give one quick angle or stat I could use.`;
 }

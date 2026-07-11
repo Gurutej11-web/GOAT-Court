@@ -6,8 +6,11 @@ import PlayerAvatar from "@/components/PlayerAvatar";
 import AutocompleteInput from "@/components/AutocompleteInput";
 import ThemeToggle from "@/components/ThemeToggle";
 import HistoryPanel from "@/components/HistoryPanel";
-import type { CaseConfig, DebateMode, DebateStyle, Matchup } from "@/lib/types";
-import { STYLES } from "@/lib/types";
+import Dashboard from "@/components/Dashboard";
+import OddsPreview from "@/components/OddsPreview";
+import { debateOfTheDay } from "@/lib/dailyMatchup";
+import type { CaseConfig, DebateMode, DebateStyle, JudgeStyle, Matchup } from "@/lib/types";
+import { JUDGE_STYLES, STYLES } from "@/lib/types";
 import { hasOnboarded, loadStats, markOnboarded, type StatsRecord } from "@/lib/stats";
 
 const EMPTY_STATS: StatsRecord = { wins: 0, losses: 0, streak: 0 };
@@ -35,11 +38,14 @@ export default function CaseSetup({
   const [side, setSide] = useState<"a" | "b" | null>(null);
   const [sportFilter, setSportFilter] = useState<string | null>(null);
   const [style, setStyle] = useState<DebateStyle>("balanced");
+  const [judgeStyle, setJudgeStyle] = useState<JudgeStyle>("strict");
   const [mode, setMode] = useState<DebateMode>("ai");
   const [showHistory, setShowHistory] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const [stats, setStats] = useState<StatsRecord>(EMPTY_STATS);
+  const [daily] = useState(() => debateOfTheDay());
 
   // These read localStorage/props seeded from the URL, which must happen
   // after mount (not during render) to stay SSR-safe.
@@ -105,7 +111,7 @@ export default function CaseSetup({
     const a = athleteA.trim();
     const b = athleteB.trim();
     const [user, ai] = side === "a" ? [a, b] : [b, a];
-    onStart({ sport: sport.trim(), userAthlete: user, aiAthlete: ai, style, mode });
+    onStart({ sport: sport.trim(), userAthlete: user, aiAthlete: ai, style, mode, judgeStyle });
   }
 
   async function copyChallengeLink() {
@@ -134,12 +140,20 @@ export default function CaseSetup({
   return (
     <main className="animate-screen mx-auto w-full max-w-2xl flex-1 px-4 py-12 sm:py-20">
       <div className="flex items-center justify-between">
-        <button
-          onClick={() => setShowHistory(true)}
-          className="text-xs text-text-dim hover:text-text transition-colors cursor-pointer"
-        >
-          History
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowHistory(true)}
+            className="text-xs text-text-dim hover:text-text transition-colors cursor-pointer"
+          >
+            History
+          </button>
+          <button
+            onClick={() => setShowDashboard(true)}
+            className="text-xs text-text-dim hover:text-text transition-colors cursor-pointer"
+          >
+            Dashboard
+          </button>
+        </div>
         <div className="flex items-center gap-3">
           <button
             onClick={onEnterTournament}
@@ -186,6 +200,16 @@ export default function CaseSetup({
           </button>
         </div>
       )}
+
+      <button
+        onClick={() => pickMatchup(daily.sport, daily.a, daily.b)}
+        className="card-shadow mt-6 flex w-full items-center justify-between rounded-lg border border-edge bg-surface px-4 py-3 text-left transition-colors hover:border-accent/50 cursor-pointer"
+      >
+        <span className="flex items-center gap-2 text-sm text-text">
+          <span className="text-accent">⭐ Debate of the day:</span> {daily.a} vs {daily.b}
+        </span>
+        <span className="text-xs text-text-dim">{daily.sport}</span>
+      </button>
 
       {savedAvailable && (
         <button
@@ -346,6 +370,28 @@ export default function CaseSetup({
         </div>
       </section>
 
+      <section className="mt-4">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-text-dim">Judge style</h2>
+        <div className="mt-2 grid grid-cols-3 gap-1.5">
+          {JUDGE_STYLES.map((s) => (
+            <button
+              key={s.value}
+              onClick={() => setJudgeStyle(s.value)}
+              className={`rounded-lg border px-2.5 py-1.5 text-left text-xs transition-colors cursor-pointer ${
+                judgeStyle === s.value
+                  ? "border-accent bg-accent/10 text-accent"
+                  : "border-edge text-text-dim hover:text-text"
+              }`}
+            >
+              <p className="font-semibold">{s.label}</p>
+              <p className="text-text-dim/80">{s.blurb}</p>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {ready && <OddsPreview sport={sport} a={athleteA} b={athleteB} />}
+
       {ready && (
         <section className="mt-8">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-text-dim">
@@ -397,6 +443,7 @@ export default function CaseSetup({
       </div>
 
       {showHistory && <HistoryPanel onClose={() => setShowHistory(false)} />}
+      {showDashboard && <Dashboard onClose={() => setShowDashboard(false)} />}
     </main>
   );
 }

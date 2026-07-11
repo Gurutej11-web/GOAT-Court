@@ -57,6 +57,8 @@ export default function Courtroom({
   const [secondsLeft, setSecondsLeft] = useState(ROUND_SECONDS);
   const [listening, setListening] = useState(false);
   const [voiceSupported, setVoiceSupported] = useState(false);
+  const [assistTip, setAssistTip] = useState<string | null>(null);
+  const [assistLoading, setAssistLoading] = useState<"coach" | "hint" | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
@@ -108,7 +110,27 @@ export default function Courtroom({
     if (!draft.trim() || busy) return;
     onSubmit(draft.trim());
     setDraft("");
+    setAssistTip(null);
     if (isFriend) setPassGateOpen(true);
+  }
+
+  async function requestAssist(type: "coach" | "hint") {
+    if (assistLoading) return;
+    setAssistLoading(type);
+    setAssistTip(null);
+    try {
+      const res = await fetch("/api/assist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type, caseConfig, phase, transcript, draft }),
+      });
+      const data = await res.json().catch(() => null);
+      setAssistTip(data?.tip ?? "Couldn't get a tip right now.");
+    } catch {
+      setAssistTip("Couldn't get a tip right now.");
+    } finally {
+      setAssistLoading(null);
+    }
   }
 
   function toggleVoice() {
@@ -350,7 +372,28 @@ export default function Courtroom({
               disabled={busy}
               className="mt-2 w-full resize-y rounded-lg border border-edge bg-page/60 px-3 py-2 leading-relaxed text-text placeholder:text-text-dim/50 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 disabled:opacity-50 transition-colors"
             />
-            <div className="mt-2 flex items-center justify-between">
+            {assistTip && (
+              <p className="mt-2 rounded-lg border border-accent/30 bg-accent/5 px-3 py-2 text-xs text-text">
+                💡 {assistTip}
+              </p>
+            )}
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => requestAssist("coach")}
+                  disabled={busy || assistLoading !== null || !draft.trim()}
+                  className="rounded-lg border border-edge px-2.5 py-1 text-xs text-text-dim transition-colors hover:border-accent/50 hover:text-text disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+                >
+                  {assistLoading === "coach" ? "Thinking…" : "Get feedback"}
+                </button>
+                <button
+                  onClick={() => requestAssist("hint")}
+                  disabled={busy || assistLoading !== null}
+                  className="rounded-lg border border-edge px-2.5 py-1 text-xs text-text-dim transition-colors hover:border-accent/50 hover:text-text disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+                >
+                  {assistLoading === "hint" ? "Thinking…" : "Need an angle?"}
+                </button>
+              </div>
               <p className="hidden text-xs text-text-dim/60 sm:block">⌘/Ctrl + Enter to send</p>
               <div className="ml-auto flex items-center gap-2">
                 {voiceSupported && (

@@ -6,6 +6,7 @@ export interface Matchup {
 
 export type DebateStyle = "balanced" | "chill" | "ruthless" | "stats";
 export type DebateMode = "ai" | "friend";
+export type JudgeStyle = "strict" | "generous" | "statistical";
 
 export const STYLES: { value: DebateStyle; label: string; blurb: string }[] = [
   { value: "balanced", label: "Balanced", blurb: "Confident, fair, hyped" },
@@ -14,12 +15,19 @@ export const STYLES: { value: DebateStyle; label: string; blurb: string }[] = [
   { value: "stats", label: "Stats Nerd", blurb: "Numbers over everything" },
 ];
 
+export const JUDGE_STYLES: { value: JudgeStyle; label: string; blurb: string }[] = [
+  { value: "strict", label: "Strict", blurb: "Tough grader, high bar" },
+  { value: "generous", label: "Generous", blurb: "Rewards effort and heart" },
+  { value: "statistical", label: "Statistical", blurb: "Cares only about the numbers" },
+];
+
 export interface CaseConfig {
   sport: string;
   userAthlete: string;
   aiAthlete: string;
   style: DebateStyle;
   mode: DebateMode;
+  judgeStyle: JudgeStyle;
 }
 
 export type Phase = "opening" | "rebuttal" | "closing";

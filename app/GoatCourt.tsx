@@ -91,8 +91,11 @@ export default function GoatCourt({ live }: { live: boolean }) {
     persist({ caseConfig, transcript, phaseIndex, verdict });
   }, [caseConfig, transcript, phaseIndex, verdict]);
 
-  function recordFinishedDebate(c: CaseConfig, v: Verdict) {
+  function recordFinishedDebate(c: CaseConfig, v: Verdict, t: TranscriptEntry[]) {
     recordResult(v.winner === "user");
+    const userWords = t
+      .filter((entry) => entry.speaker === "user")
+      .reduce((sum, entry) => sum + entry.text.trim().split(/\s+/).filter(Boolean).length, 0);
     addHistoryEntry({
       sport: c.sport,
       userAthlete: c.userAthlete,
@@ -101,6 +104,7 @@ export default function GoatCourt({ live }: { live: boolean }) {
       userTotal: totalScore(v, "user"),
       aiTotal: totalScore(v, "ai"),
       mode: c.mode,
+      userWords,
     });
   }
 
@@ -183,7 +187,7 @@ export default function GoatCourt({ live }: { live: boolean }) {
       }
       const v = data.verdict as Verdict;
       setVerdict(v);
-      recordFinishedDebate(c, v);
+      recordFinishedDebate(c, v, t);
     } catch (err) {
       console.error(err);
       setFailedStage("judge");
@@ -281,6 +285,7 @@ export default function GoatCourt({ live }: { live: boolean }) {
       <VerdictScene
         caseConfig={caseConfig}
         verdict={verdict}
+        transcript={transcript}
         live={live}
         onRematch={resetTrial}
         onNewCase={newCase}

@@ -4,7 +4,8 @@ import { useState } from "react";
 import Courtroom from "@/components/Courtroom";
 import TopBar from "@/components/TopBar";
 import PlayerAvatar from "@/components/PlayerAvatar";
-import { SPORTS, athleteNamesFor, imageFor } from "@/lib/matchups";
+import AutocompleteInput from "@/components/AutocompleteInput";
+import { imageFor, suggestAthletes, suggestSports } from "@/lib/matchups";
 import type { CaseConfig, Phase, TranscriptEntry, Verdict } from "@/lib/types";
 import { PHASES, totalScore } from "@/lib/types";
 import { addHistoryEntry, recordResult } from "@/lib/stats";
@@ -14,14 +15,22 @@ interface Props {
   onExit: () => void;
 }
 
-type Stage = "setup" | "semifinal" | "semifinal-result" | "final" | "final-result" | "champion" | "eliminated";
+type Round = "quarterfinal" | "semifinal" | "final";
+const ROUNDS: Round[] = ["quarterfinal", "semifinal", "final"];
+const ROUND_LABELS: Record<Round, string> = {
+  quarterfinal: "Quarterfinal",
+  semifinal: "Semifinal",
+  final: "Final",
+};
+
+type Stage = "setup" | "debate" | "result" | "champion" | "eliminated";
 type FailedStage = "counsel" | "judge" | null;
 
 export default function TournamentMode({ live, onExit }: Props) {
   const [sport, setSport] = useState("");
   const [champion, setChampion] = useState("");
-  const [opponent1, setOpponent1] = useState("");
-  const [opponent2, setOpponent2] = useState("");
+  const [opponents, setOpponents] = useState<[string, string, string]>(["", "", ""]);
+  const [roundIndex, setRoundIndex] = useState(0);
   const [stage, setStage] = useState<Stage>("setup");
 
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
@@ -34,17 +43,24 @@ export default function TournamentMode({ live, onExit }: Props) {
   const [failedStage, setFailedStage] = useState<FailedStage>(null);
 
   const phase: Phase = PHASES[Math.min(phaseIndex, PHASES.length - 1)];
-  const roster = athleteNamesFor(sport);
-  const ready =
-    Boolean(sport && champion && opponent1 && opponent2) &&
-    new Set([champion, opponent1, opponent2]).size === 3;
+  const round: Round = ROUNDS[Math.min(roundIndex, ROUNDS.length - 1)];
+  const opponent = opponents[roundIndex];
 
-  function currentOpponent(): string {
-    return stage === "final" ? opponent2 : opponent1;
-  }
+  const allNames = [champion, ...opponents].map((n) => n.trim());
+  const ready =
+    Boolean(sport.trim()) &&
+    allNames.every((n) => n.length > 0) &&
+    new Set(allNames.map((n) => n.toLowerCase())).size === allNames.length;
 
   function currentCaseConfig(): CaseConfig {
-    return { sport, userAthlete: champion, aiAthlete: currentOpponent(), style: "balanced", mode: "ai" };
+    return {
+      sport: sport.trim(),
+      userAthlete: champion.trim(),
+      aiAthlete: opponent.trim(),
+      style: "balanced",
+      mode: "ai",
+      judgeStyle: "strict",
+    };
   }
 
   function resetDebateState() {
@@ -58,10 +74,19 @@ export default function TournamentMode({ live, onExit }: Props) {
     setFailedStage(null);
   }
 
+  function setOpponent(i: number, value: string) {
+    setOpponents((prev) => {
+      const next = [...prev] as [string, string, string];
+      next[i] = value;
+      return next;
+    });
+  }
+
   function startTournament() {
     if (!ready) return;
     resetDebateState();
-    setStage("semifinal");
+    setRoundIndex(0);
+    setStage("debate");
   }
 
   async function runCounsel(c: CaseConfig, t: TranscriptEntry[], p: Phase) {
@@ -124,6 +149,9 @@ export default function TournamentMode({ live, onExit }: Props) {
       if (!res.ok || !data?.verdict) throw new Error(data?.error ?? "The judge failed to reach a verdict.");
       const v = data.verdict as Verdict;
       setVerdict(v);
+      const userWords = t
+        .filter((entry) => entry.speaker === "user")
+        .reduce((sum, entry) => sum + entry.text.trim().split(/\s+/).filter(Boolean).length, 0);
       recordResult(v.winner === "user");
       addHistoryEntry({
         sport: c.sport,
@@ -133,8 +161,9 @@ export default function TournamentMode({ live, onExit }: Props) {
         userTotal: totalScore(v, "user"),
         aiTotal: totalScore(v, "ai"),
         mode: "ai",
+        userWords,
       });
-      setStage(stage === "final" ? "final-result" : "semifinal-result");
+      setStage("result");
     } catch (err) {
       console.error(err);
       setFailedStage("judge");
@@ -157,56 +186,76 @@ export default function TournamentMode({ live, onExit }: Props) {
     else void runCounsel(c, transcript, phase);
   }
 
-  function advanceToFinal() {
+  function advance() {
+    if (roundIndex === ROUNDS.length - 1) {
+      setStage("champion");
+      return;
+    }
     resetDebateState();
-    setStage("final");
-  }
-
-  function finishTournament(won: boolean) {
-    setStage(won ? "champion" : "eliminated");
+    setRoundIndex((i) => i + 1);
+    setStage("debate");
   }
 
   function restartSetup() {
     setSport("");
     setChampion("");
-    setOpponent1("");
-    setOpponent2("");
+    setOpponents(["", "", ""]);
     resetDebateState();
+    setRoundIndex(0);
     setStage("setup");
   }
 
-  // Route to championship / elimination once a result screen is showing.
-  if (stage === "semifinal-result" && verdict) {
-    const won = verdict.winner === "user";
-    return (
-      <ResultScreen
-        won={won}
-        champion={champion}
-        opponent={opponent1}
-        verdict={verdict}
-        sport={sport}
-        primaryLabel={won ? "Advance to the final →" : "Try again"}
-        onPrimary={won ? advanceToFinal : restartSetup}
-        onExit={onExit}
-        subtitle={won ? "Semifinal won. One more debate to go." : "Knocked out in the semifinal."}
-      />
-    );
-  }
+  const fieldClass =
+    "w-full rounded-lg border border-edge bg-surface px-3 py-2.5 text-text placeholder:text-text-dim/50 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 transition-colors";
 
-  if (stage === "final-result" && verdict) {
+  if (stage === "result" && verdict) {
     const won = verdict.winner === "user";
+    const userTotal = totalScore(verdict, "user");
+    const aiTotal = totalScore(verdict, "ai");
     return (
-      <ResultScreen
-        won={won}
-        champion={champion}
-        opponent={opponent2}
-        verdict={verdict}
-        sport={sport}
-        primaryLabel={won ? "🏆 Claim the crown" : "Try again"}
-        onPrimary={() => (won ? finishTournament(true) : restartSetup())}
-        onExit={onExit}
-        subtitle={won ? "Final won. You're one tap from the title." : "So close. Knocked out in the final."}
-      />
+      <>
+        <TopBar onHome={onExit} />
+        <main className="animate-screen mx-auto w-full max-w-2xl flex-1 px-4 py-12 text-center">
+          <PlayerAvatar
+            name={won ? champion : opponent}
+            image={imageFor(sport, won ? champion : opponent)}
+            size={88}
+            className="card-shadow mx-auto"
+          />
+          <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-accent">
+            {won ? `${ROUND_LABELS[round]} won` : `${ROUND_LABELS[round]} lost`}
+          </p>
+          <h1 className="mt-2 font-display text-3xl font-bold text-text">
+            {champion} {userTotal}-{aiTotal} {opponent}
+          </h1>
+          <p className="mt-2 text-text-dim">
+            {won
+              ? roundIndex === ROUNDS.length - 1
+                ? "Final won. One tap from the title."
+                : `${ROUND_LABELS[round]} won. On to the ${ROUND_LABELS[ROUNDS[roundIndex + 1]].toLowerCase()}.`
+              : `Knocked out in the ${ROUND_LABELS[round].toLowerCase()}.`}
+          </p>
+          <p className="mx-auto mt-4 max-w-md text-sm text-text-dim">{verdict.opinion}</p>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <button
+              onClick={won ? advance : restartSetup}
+              className="rounded-xl bg-accent px-6 py-2.5 font-display font-bold text-accent-ink shadow-lg shadow-accent/20 hover:bg-accent-bright hover:scale-[1.02] transition-all cursor-pointer"
+            >
+              {won
+                ? roundIndex === ROUNDS.length - 1
+                  ? "🏆 Claim the crown"
+                  : `Advance to the ${ROUND_LABELS[ROUNDS[roundIndex + 1]]} →`
+                : "Try again"}
+            </button>
+            <button
+              onClick={onExit}
+              className="rounded-xl border border-edge bg-surface px-6 py-2.5 font-display font-bold text-text hover:border-accent/50 transition-all cursor-pointer"
+            >
+              Exit
+            </button>
+          </div>
+        </main>
+      </>
     );
   }
 
@@ -226,7 +275,7 @@ export default function TournamentMode({ live, onExit }: Props) {
             {champion} <span className="text-accent">is the GOAT</span>
           </h1>
           <p className="mt-2 text-text-dim">
-            Beat {opponent1} and {opponent2} back to back in the {sport} bracket.
+            Beat {opponents.join(", ")} back to back to take the {sport} bracket.
           </p>
           <div className="mt-8 flex justify-center gap-3">
             <button
@@ -247,39 +296,11 @@ export default function TournamentMode({ live, onExit }: Props) {
     );
   }
 
-  if (stage === "eliminated") {
-    return (
-      <>
-        <TopBar onHome={onExit} />
-        <main className="animate-screen mx-auto w-full max-w-2xl flex-1 px-4 py-16 text-center">
-          <PlayerAvatar name={champion} image={imageFor(sport, champion)} size={96} className="card-shadow mx-auto" />
-          <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-neutral">Eliminated</p>
-          <h1 className="mt-2 font-display text-3xl font-bold text-text">The run ends here</h1>
-          <p className="mt-2 text-text-dim">Run it back with a new bracket.</p>
-          <div className="mt-8 flex justify-center gap-3">
-            <button
-              onClick={restartSetup}
-              className="rounded-xl bg-accent px-6 py-2.5 font-display font-bold text-accent-ink shadow-lg shadow-accent/20 hover:bg-accent-bright transition-all cursor-pointer"
-            >
-              New tournament
-            </button>
-            <button
-              onClick={onExit}
-              className="rounded-xl border border-edge bg-surface px-6 py-2.5 font-display font-bold text-text hover:border-accent/50 transition-all cursor-pointer"
-            >
-              Exit
-            </button>
-          </div>
-        </main>
-      </>
-    );
-  }
-
-  if (stage === "semifinal" || stage === "final") {
+  if (stage === "debate") {
     return (
       <>
         <div className="border-b border-edge/60 bg-accent/5 px-4 py-2 text-center text-xs font-semibold uppercase tracking-wide text-accent">
-          {stage === "semifinal" ? "Semifinal" : "Final"} · {champion}&rsquo;s bracket run
+          {ROUND_LABELS[round]} ({roundIndex + 1}/{ROUNDS.length}) · {champion}&rsquo;s bracket run
         </div>
         <Courtroom
           caseConfig={currentCaseConfig()}
@@ -308,61 +329,57 @@ export default function TournamentMode({ live, onExit }: Props) {
             🏆 <span className="text-accent">Tournament</span> mode
           </h1>
           <p className="mt-3 text-text-dim">
-            Pick your champion and two opponents. Beat them both, back to back, to be crowned GOAT.
+            Pick your champion and three opponents. Beat them all, back to back, quarterfinal to
+            final, to be crowned bracket GOAT.
           </p>
         </header>
 
         <section className="mt-8">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-text-dim">Sport</h2>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {SPORTS.map((s) => (
-              <button
-                key={s.sport}
-                onClick={() => {
-                  setSport(s.sport);
-                  setChampion("");
-                  setOpponent1("");
-                  setOpponent2("");
-                }}
-                className={`rounded-full border px-3 py-1.5 text-sm transition-colors cursor-pointer ${
-                  sport === s.sport
-                    ? "border-accent bg-accent/15 text-accent"
-                    : "border-edge text-text-dim hover:text-text"
-                }`}
-              >
-                {s.sport}
-              </button>
-            ))}
+          <label className="text-xs font-semibold uppercase tracking-wide text-text-dim">Sport</label>
+          <div className="mt-2">
+            <AutocompleteInput
+              value={sport}
+              onChange={setSport}
+              suggestions={suggestSports(sport)}
+              placeholder="Sport"
+              ariaLabel="Sport"
+              className={fieldClass}
+            />
           </div>
         </section>
 
-        {sport && (
-          <section className="mt-6 grid gap-3">
-            {[
-              { label: "Your champion", value: champion, set: setChampion, exclude: [opponent1, opponent2] },
-              { label: "Opponent 1 (semifinal)", value: opponent1, set: setOpponent1, exclude: [champion, opponent2] },
-              { label: "Opponent 2 (final)", value: opponent2, set: setOpponent2, exclude: [champion, opponent1] },
-            ].map((slot) => (
-              <div key={slot.label}>
-                <label className="text-xs font-semibold text-text-dim">{slot.label}</label>
-                <select
-                  value={slot.value}
-                  onChange={(e) => slot.set(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-edge bg-surface px-3 py-2.5 text-text focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer"
-                >
-                  <option value="">Choose a player</option>
-                  {roster
-                    .filter((n) => !slot.exclude.includes(n))
-                    .map((n) => (
-                      <option key={n} value={n}>
-                        {n}
-                      </option>
-                    ))}
-                </select>
+        <section className="mt-4 grid gap-3">
+          <div>
+            <label className="text-xs font-semibold text-text-dim">Your champion</label>
+            <div className="mt-1">
+              <AutocompleteInput
+                value={champion}
+                onChange={setChampion}
+                suggestions={suggestAthletes(champion, sport, "")}
+                placeholder="Who's your pick?"
+                ariaLabel="Champion"
+                className={fieldClass}
+              />
+            </div>
+          </div>
+          {ROUNDS.map((r, i) => (
+            <div key={r}>
+              <label className="text-xs font-semibold text-text-dim">
+                Opponent {i + 1} ({ROUND_LABELS[r]})
+              </label>
+              <div className="mt-1">
+                <AutocompleteInput
+                  value={opponents[i]}
+                  onChange={(v) => setOpponent(i, v)}
+                  suggestions={suggestAthletes(opponents[i], sport, champion)}
+                  placeholder={`Who do they face in the ${ROUND_LABELS[r].toLowerCase()}?`}
+                  ariaLabel={`Opponent ${i + 1}`}
+                  className={fieldClass}
+                />
               </div>
-            ))}
-          </section>
-        )}
+            </div>
+          ))}
+        </section>
 
         <div className="mt-10 text-center">
           <button
@@ -371,66 +388,6 @@ export default function TournamentMode({ live, onExit }: Props) {
             className="rounded-xl bg-accent px-8 py-3 font-display text-lg font-bold text-accent-ink shadow-lg shadow-accent/20 transition-all hover:bg-accent-bright hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-30 disabled:shadow-none disabled:hover:scale-100 cursor-pointer"
           >
             Start the bracket
-          </button>
-        </div>
-      </main>
-    </>
-  );
-}
-
-function ResultScreen({
-  won,
-  champion,
-  opponent,
-  verdict,
-  sport,
-  primaryLabel,
-  onPrimary,
-  onExit,
-  subtitle,
-}: {
-  won: boolean;
-  champion: string;
-  opponent: string;
-  verdict: Verdict;
-  sport: string;
-  primaryLabel: string;
-  onPrimary: () => void;
-  onExit: () => void;
-  subtitle: string;
-}) {
-  const userTotal = totalScore(verdict, "user");
-  const aiTotal = totalScore(verdict, "ai");
-  return (
-    <>
-      <TopBar onHome={onExit} />
-      <main className="animate-screen mx-auto w-full max-w-2xl flex-1 px-4 py-12 text-center">
-        <PlayerAvatar
-          name={won ? champion : opponent}
-          image={imageFor(sport, won ? champion : opponent)}
-          size={88}
-          className="card-shadow mx-auto"
-        />
-        <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-accent">
-          {won ? "Round won" : "Round lost"}
-        </p>
-        <h1 className="mt-2 font-display text-3xl font-bold text-text">
-          {champion} {userTotal}-{aiTotal} {opponent}
-        </h1>
-        <p className="mt-2 text-text-dim">{subtitle}</p>
-        <p className="mx-auto mt-4 max-w-md text-sm text-text-dim">{verdict.opinion}</p>
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <button
-            onClick={onPrimary}
-            className="rounded-xl bg-accent px-6 py-2.5 font-display font-bold text-accent-ink shadow-lg shadow-accent/20 hover:bg-accent-bright hover:scale-[1.02] transition-all cursor-pointer"
-          >
-            {primaryLabel}
-          </button>
-          <button
-            onClick={onExit}
-            className="rounded-xl border border-edge bg-surface px-6 py-2.5 font-display font-bold text-text hover:border-accent/50 transition-all cursor-pointer"
-          >
-            Exit
           </button>
         </div>
       </main>

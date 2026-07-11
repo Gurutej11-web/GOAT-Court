@@ -5,12 +5,14 @@ import { imageFor } from "@/lib/matchups";
 import PlayerAvatar from "@/components/PlayerAvatar";
 import TopBar from "@/components/TopBar";
 import { shareOrDownloadVerdictCard } from "@/lib/shareImage";
-import type { CaseConfig, Verdict } from "@/lib/types";
+import { PHASE_LABELS } from "@/lib/types";
+import type { CaseConfig, TranscriptEntry, Verdict } from "@/lib/types";
 import { totalScore } from "@/lib/types";
 
 interface Props {
   caseConfig: CaseConfig;
   verdict: Verdict;
+  transcript: TranscriptEntry[];
   live: boolean;
   onRematch: () => void;
   onNewCase: () => void;
@@ -19,6 +21,7 @@ interface Props {
 export default function VerdictScene({
   caseConfig,
   verdict,
+  transcript,
   live,
   onRematch,
   onNewCase,
@@ -56,6 +59,30 @@ export default function VerdictScene({
     });
     setImageState("done");
     setTimeout(() => setImageState("idle"), 2000);
+  }
+
+  function exportTranscript() {
+    const lines: string[] = [
+      `GOAT COURT — ${caseConfig.userAthlete} vs ${caseConfig.aiAthlete} (${caseConfig.sport})`,
+      "",
+      ...transcript.map((entry) => {
+        const label = entry.speaker === "user" ? caseConfig.userAthlete : caseConfig.aiAthlete;
+        return `[${PHASE_LABELS[entry.phase]}] ${label}:\n${entry.text}\n`;
+      }),
+      "— VERDICT —",
+      `Winner: ${winnerAthlete} (${userTotal}-${aiTotal})`,
+      "",
+      verdict.opinion,
+      "",
+      `Best line: "${verdict.bestLine}"`,
+    ];
+    const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `goat-court-${caseConfig.userAthlete}-vs-${caseConfig.aiAthlete}.txt`.replace(/\s+/g, "-");
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -172,6 +199,12 @@ export default function VerdictScene({
                 className="rounded-lg border border-edge px-2.5 py-1 text-xs text-text-dim hover:border-accent/50 hover:text-text transition-colors disabled:opacity-50 cursor-pointer"
               >
                 {imageState === "working" ? "Making…" : imageState === "done" ? "Done!" : "📷 Share image"}
+              </button>
+              <button
+                onClick={exportTranscript}
+                className="rounded-lg border border-edge px-2.5 py-1 text-xs text-text-dim hover:border-accent/50 hover:text-text transition-colors cursor-pointer"
+              >
+                📄 Export transcript
               </button>
             </div>
           </div>
