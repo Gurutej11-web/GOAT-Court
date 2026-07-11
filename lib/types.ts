@@ -15,9 +15,9 @@ export type Phase = "opening" | "rebuttal" | "closing";
 export const PHASES: Phase[] = ["opening", "rebuttal", "closing"];
 
 export const PHASE_LABELS: Record<Phase, string> = {
-  opening: "Opening Statements",
-  rebuttal: "Rebuttal",
-  closing: "Closing Arguments",
+  opening: "Make Your Case",
+  rebuttal: "Clap Back",
+  closing: "Bring It Home",
 };
 
 export type Side = "user" | "ai";

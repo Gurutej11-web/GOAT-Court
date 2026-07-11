@@ -26,93 +26,86 @@ export default function VerdictScene({
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
       <header className="text-center">
-        <svg
-          viewBox="0 0 64 64"
-          className="animate-gavel mx-auto h-16 w-16"
-          aria-hidden="true"
-        >
-          <g transform="rotate(-40 30 26)">
-            <rect x="14" y="20" width="32" height="12" rx="3" fill="#c9a227" />
-            <rect x="12" y="18" width="6" height="16" rx="2" fill="#e6c258" />
-            <rect x="42" y="18" width="6" height="16" rx="2" fill="#e6c258" />
-            <rect x="28" y="32" width="5" height="22" rx="2.5" fill="#a03a34" />
-          </g>
-          <rect x="12" y="52" width="28" height="5" rx="2.5" fill="#c9a227" />
-        </svg>
-        <p className="mt-4 font-mono text-xs tracking-[0.35em] text-brass uppercase animate-rise">
-          The court has reached a verdict{!live && " · demo mode"}
+        <span className="animate-trophy mx-auto block text-6xl" aria-hidden="true">
+          🏆
+        </span>
+        <p className="mt-4 font-mono text-xs tracking-[0.3em] text-cyan uppercase animate-rise">
+          And the verdict is in{!live && " · demo mode"}
         </p>
         <h1
-          className="mt-3 font-display text-4xl font-bold text-parchment sm:text-5xl animate-rise"
+          className="mt-3 font-display text-4xl font-bold text-text sm:text-5xl animate-rise"
           style={{ animationDelay: "0.15s" }}
         >
-          {winnerAthlete} <span className="text-brass">is the GOAT</span>
+          {winnerAthlete}{" "}
+          <span className="bg-gradient-to-r from-violet-bright to-cyan bg-clip-text text-transparent">
+            is the GOAT
+          </span>
         </h1>
         <p
-          className="mt-2 font-display italic text-parchment-dim animate-rise"
+          className="mt-2 text-text-dim animate-rise"
           style={{ animationDelay: "0.25s" }}
         >
           {userWon
-            ? "Judgment entered for the human counsel. The machine has been out-lawyered."
-            : "Judgment entered for the AI counsel. The court thanks you for a spirited defeat."}
+            ? "You out-argued the AI. Nicely done."
+            : "The AI takes this one — come back and run it again."}
         </p>
       </header>
 
       {/* Scorecard */}
       <section
-        className="mt-8 overflow-hidden rounded-lg border border-line animate-rise"
+        className="mt-8 overflow-hidden rounded-xl border border-edge animate-rise"
         style={{ animationDelay: "0.35s" }}
       >
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-line bg-panel-2 font-mono text-[10px] tracking-[0.2em] uppercase">
-                <th className="px-4 py-3 text-left text-parchment-dim">Round</th>
-                <th className="px-3 py-3 text-center text-brass">
+              <tr className="border-b border-edge bg-surface-2 font-mono text-[10px] tracking-[0.2em] uppercase">
+                <th className="px-4 py-3 text-left text-text-dim">Round</th>
+                <th className="px-3 py-3 text-center text-violet-bright">
                   You · {caseConfig.userAthlete}
                 </th>
-                <th className="px-3 py-3 text-center text-crimson">
+                <th className="px-3 py-3 text-center text-cyan">
                   AI · {caseConfig.aiAthlete}
                 </th>
               </tr>
             </thead>
             <tbody>
               {verdict.scores.map((s) => (
-                <tr key={s.phase} className="border-b border-line/60 bg-panel">
+                <tr key={s.phase} className="border-b border-edge/60 bg-surface">
                   <td className="px-4 py-3">
-                    <p className="font-display font-bold text-parchment">{s.phase}</p>
-                    <p className="mt-0.5 text-xs text-parchment-dim">{s.note}</p>
+                    <p className="font-display font-bold text-text">{s.phase}</p>
+                    <p className="mt-0.5 text-xs text-text-dim">{s.note}</p>
                   </td>
                   <td
                     className={`px-3 py-3 text-center font-mono text-lg ${
-                      s.user >= s.ai ? "text-brass-bright font-semibold" : "text-parchment-dim"
+                      s.user >= s.ai ? "text-violet-bright font-semibold" : "text-text-dim"
                     }`}
                   >
                     {s.user}
                   </td>
                   <td
                     className={`px-3 py-3 text-center font-mono text-lg ${
-                      s.ai >= s.user ? "text-crimson font-semibold" : "text-parchment-dim"
+                      s.ai >= s.user ? "text-cyan font-semibold" : "text-text-dim"
                     }`}
                   >
                     {s.ai}
                   </td>
                 </tr>
               ))}
-              <tr className="bg-panel-2 font-mono">
-                <td className="px-4 py-3 text-[11px] tracking-[0.2em] text-parchment-dim uppercase">
+              <tr className="bg-surface-2 font-mono">
+                <td className="px-4 py-3 text-[11px] tracking-[0.2em] text-text-dim uppercase">
                   Total
                 </td>
                 <td
                   className={`px-3 py-3 text-center text-xl ${
-                    userWon ? "text-brass-bright font-semibold" : "text-parchment-dim"
+                    userWon ? "text-violet-bright font-semibold" : "text-text-dim"
                   }`}
                 >
                   {userTotal}
                 </td>
                 <td
                   className={`px-3 py-3 text-center text-xl ${
-                    !userWon ? "text-crimson font-semibold" : "text-parchment-dim"
+                    !userWon ? "text-cyan font-semibold" : "text-text-dim"
                   }`}
                 >
                   {aiTotal}
@@ -123,23 +116,19 @@ export default function VerdictScene({
         </div>
       </section>
 
-      {/* Judicial opinion */}
+      {/* Verdict writeup */}
       <section
-        className="mt-6 rounded-lg border border-brass/40 bg-panel p-5 animate-rise"
+        className="mt-6 rounded-xl border border-violet/30 bg-surface p-5 animate-rise"
         style={{ animationDelay: "0.45s" }}
       >
-        <h2 className="font-mono text-[11px] tracking-[0.25em] text-brass uppercase">
-          Opinion of the court
+        <h2 className="font-mono text-[11px] tracking-[0.25em] text-violet-bright uppercase">
+          Why {winnerAthlete} won
         </h2>
-        <p className="mt-3 whitespace-pre-wrap font-display leading-relaxed text-parchment">
-          {verdict.opinion}
-        </p>
-        <blockquote className="mt-4 border-l-2 border-brass pl-4">
-          <p className="font-display italic text-parchment-dim">
-            &ldquo;{verdict.bestLine}&rdquo;
-          </p>
-          <cite className="mt-1 block font-mono text-[10px] tracking-wider text-parchment-dim/70 uppercase not-italic">
-            — Line of the trial, as entered into the record
+        <p className="mt-3 whitespace-pre-wrap leading-relaxed text-text">{verdict.opinion}</p>
+        <blockquote className="mt-4 border-l-2 border-cyan pl-4">
+          <p className="italic text-text-dim">&ldquo;{verdict.bestLine}&rdquo;</p>
+          <cite className="mt-1 block font-mono text-[10px] tracking-wider text-text-dim/70 uppercase not-italic">
+            — best line of the debate
           </cite>
         </blockquote>
       </section>
@@ -150,15 +139,15 @@ export default function VerdictScene({
       >
         <button
           onClick={onRematch}
-          className="rounded-md border border-brass bg-brass px-6 py-2.5 font-display font-bold text-bench hover:bg-brass-bright transition-all cursor-pointer"
+          className="rounded-xl bg-gradient-to-r from-violet to-cyan px-6 py-2.5 font-display font-bold text-ink hover:opacity-90 transition-all cursor-pointer"
         >
-          Appeal — retry this case
+          Run it back
         </button>
         <button
           onClick={onNewCase}
-          className="rounded-md border border-line bg-panel px-6 py-2.5 font-display font-bold text-parchment hover:border-brass/60 transition-all cursor-pointer"
+          className="rounded-xl border border-edge bg-surface px-6 py-2.5 font-display font-bold text-text hover:border-violet/60 transition-all cursor-pointer"
         >
-          File a new case
+          New matchup
         </button>
       </div>
     </main>
