@@ -10,7 +10,7 @@ export interface SportEntry {
   athletes: Athlete[];
 }
 
-/** The curated database — each player here has a real photo and real stats. */
+/** The curated database: each player here has a real photo and real stats. */
 export const SPORTS: SportEntry[] = [
   {
     sport: "Basketball",

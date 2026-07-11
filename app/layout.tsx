@@ -20,11 +20,11 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GOAT Court — Pick Two Legends, Settle the Debate",
+  title: "GOAT Court: Pick Two Legends, Settle the Debate",
   description:
     "Argue your athlete is the greatest of all time against an AI that fires back with real stats, then let an AI judge decide. Basketball, soccer, tennis, football, and boxing legends.",
   openGraph: {
-    title: "GOAT Court — Pick Two Legends, Settle the Debate",
+    title: "GOAT Court: Pick Two Legends, Settle the Debate",
     description:
       "Pick two sports legends, argue your case against an AI, and let the AI judge decide who's the GOAT.",
     type: "website",

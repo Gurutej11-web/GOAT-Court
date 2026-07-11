@@ -47,7 +47,7 @@ export default function VerdictScene({
         <p className="mt-2 text-text-dim animate-rise" style={{ animationDelay: "0.2s" }}>
           {userWon
             ? "You out-argued the AI. Nicely done."
-            : "The AI takes this one — come back and run it again."}
+            : "The AI takes this one. Come back and run it again."}
         </p>
       </header>
 
@@ -126,7 +126,7 @@ export default function VerdictScene({
         <blockquote className="mt-4 border-l-2 border-cyan pl-4">
           <p className="italic text-text-dim">&ldquo;{verdict.bestLine}&rdquo;</p>
           <cite className="mt-1 block text-xs text-text-dim/70 not-italic">
-            — best line of the debate
+            Best line of the debate
           </cite>
         </blockquote>
       </section>

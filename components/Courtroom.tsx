@@ -23,7 +23,7 @@ interface Props {
 const PLACEHOLDERS: Record<Phase, string> = {
   opening: "My pick is the GOAT because… (bring your best stats and receipts)",
   rebuttal: "Nice try, but… (call out their weak point and defend your pick)",
-  closing: "Bottom line: … (wrap it up — why does your GOAT win?)",
+  closing: "Bottom line: … (wrap it up, and say why your GOAT wins)",
 };
 
 export default function Courtroom({

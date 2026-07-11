@@ -87,13 +87,13 @@ export async function POST(req: Request) {
     const status = err instanceof Groq.APIError ? err.status : undefined;
     if (status === 401) {
       return Response.json(
-        { error: "The judge rejected the credentials — check GROQ_API_KEY in .env.local." },
+        { error: "The judge rejected the credentials. Check GROQ_API_KEY in .env.local." },
         { status: 500 },
       );
     }
     if (status === 429) {
       return Response.json(
-        { error: "Too many requests right now — wait a moment and retry." },
+        { error: "Too many requests right now. Wait a moment and retry." },
         { status: 429 },
       );
     }

@@ -34,7 +34,7 @@ function persist(state: SavedState | null) {
     if (state) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     else window.localStorage.removeItem(STORAGE_KEY);
   } catch {
-    // storage unavailable — nothing to do
+    // storage unavailable, nothing to do
   }
 }
 

@@ -84,7 +84,7 @@ export default function CaseSetup({ live, savedAvailable, onStart, onResume }: P
         </p>
         {!live && (
           <span className="mt-3 inline-block rounded-full border border-cyan/40 bg-cyan-deep/15 px-3 py-1 text-xs text-text-dim">
-            Demo mode — no API key yet
+            Demo mode · no API key yet
           </span>
         )}
       </header>
@@ -236,7 +236,7 @@ export default function CaseSetup({ live, savedAvailable, onStart, onResume }: P
         )}
         {mode === "custom" && (
           <p className="mt-2 text-xs text-text-dim/70">
-            The AI still won't make up stats for players it doesn't know well — it'll argue on what it
+            The AI still won't make up stats for players it doesn't know well. It'll argue on what it
             actually knows.
           </p>
         )}
