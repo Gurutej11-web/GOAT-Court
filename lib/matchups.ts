@@ -26,6 +26,8 @@ export const SPORTS: SportEntry[] = [
       { name: "Magic Johnson", image: "/players/magic-johnson.jpg" },
       { name: "Larry Bird", image: "/players/larry-bird.jpg" },
       { name: "Kareem Abdul-Jabbar", image: "/players/kareem-abdul-jabbar.jpg" },
+      { name: "Stephen Curry", image: "/players/stephen-curry.jpg" },
+      { name: "Shaquille O'Neal", image: "/players/shaquille-oneal.jpg" },
     ],
   },
   {
@@ -36,6 +38,9 @@ export const SPORTS: SportEntry[] = [
       { name: "Pelé", image: "/players/pele.jpg" },
       { name: "Diego Maradona", image: "/players/diego-maradona.jpg" },
       { name: "Zinedine Zidane", image: "/players/zinedine-zidane.jpg" },
+      { name: "Neymar", image: "/players/neymar.jpg" },
+      { name: "Ronaldinho", image: "/players/ronaldinho.jpg" },
+      { name: "Kylian Mbappé", image: "/players/kylian-mbappe.jpg" },
     ],
   },
   {
@@ -46,6 +51,8 @@ export const SPORTS: SportEntry[] = [
       { name: "Novak Djokovic", image: "/players/novak-djokovic.jpg" },
       { name: "Serena Williams", image: "/players/serena-williams.jpg" },
       { name: "Steffi Graf", image: "/players/steffi-graf.jpg" },
+      { name: "Andy Murray", image: "/players/andy-murray.jpg" },
+      { name: "Venus Williams", image: "/players/venus-williams.jpg" },
     ],
   },
   {
@@ -55,6 +62,8 @@ export const SPORTS: SportEntry[] = [
       { name: "Peyton Manning", image: "/players/peyton-manning.jpg" },
       { name: "Patrick Mahomes", image: "/players/patrick-mahomes.jpg" },
       { name: "Jerry Rice", image: "/players/jerry-rice.jpg" },
+      { name: "Aaron Rodgers", image: "/players/aaron-rodgers.jpg" },
+      { name: "Joe Montana", image: "/players/joe-montana.jpg" },
     ],
   },
   {
@@ -64,9 +73,34 @@ export const SPORTS: SportEntry[] = [
       { name: "Mike Tyson", image: "/players/mike-tyson.jpg" },
       { name: "Floyd Mayweather", image: "/players/floyd-mayweather.jpg" },
       { name: "Manny Pacquiao", image: "/players/manny-pacquiao.jpg" },
+      { name: "Sugar Ray Robinson", image: "/players/sugar-ray-robinson.jpg" },
+      { name: "George Foreman", image: "/players/george-foreman.jpg" },
+    ],
+  },
+  {
+    sport: "Cricket",
+    athletes: [
+      { name: "Sachin Tendulkar", image: "/players/sachin-tendulkar.jpg" },
+      { name: "Virat Kohli", image: "/players/virat-kohli.jpg" },
+      { name: "Don Bradman", image: "/players/don-bradman.jpg" },
+      { name: "Viv Richards", image: "/players/viv-richards.jpg" },
+    ],
+  },
+  {
+    sport: "Ice Hockey",
+    athletes: [
+      { name: "Wayne Gretzky", image: "/players/wayne-gretzky.jpg" },
+      { name: "Alex Ovechkin", image: "/players/alex-ovechkin.jpg" },
+      { name: "Mario Lemieux", image: "/players/mario-lemieux.jpg" },
+      { name: "Bobby Orr", image: "/players/bobby-orr.jpg" },
     ],
   },
 ];
+
+/** Every known player, flattened, for search/autocomplete across all sports. */
+export const ALL_ATHLETES: { sport: string; athlete: Athlete }[] = SPORTS.flatMap((s) =>
+  s.athletes.map((athlete) => ({ sport: s.sport, athlete })),
+);
 
 /** Quick-start picks shown as chips on the home screen. */
 export const FEATURED: Matchup[] = [
@@ -77,20 +111,45 @@ export const FEATURED: Matchup[] = [
   { sport: "Boxing", a: "Muhammad Ali", b: "Mike Tyson" },
   { sport: "Basketball", a: "Kobe Bryant", b: "LeBron James" },
   { sport: "Soccer", a: "Pelé", b: "Diego Maradona" },
-  { sport: "Tennis", a: "Serena Williams", b: "Steffi Graf" },
+  { sport: "Cricket", a: "Sachin Tendulkar", b: "Virat Kohli" },
+  { sport: "Ice Hockey", a: "Wayne Gretzky", b: "Alex Ovechkin" },
 ];
 
 export function athletesFor(sport: string): Athlete[] {
-  return SPORTS.find((s) => s.sport === sport)?.athletes ?? [];
+  return SPORTS.find((s) => s.sport.toLowerCase() === sport.toLowerCase())?.athletes ?? [];
 }
 
 export function athleteNamesFor(sport: string): string[] {
   return athletesFor(sport).map((a) => a.name);
 }
 
-/** Looks up a known player's photo. Returns null for custom/typed-in players. */
+/** Looks up a known player's photo, matched loosely by name (any sport if none given). */
 export function imageFor(sport: string, name: string): string | null {
-  return athletesFor(sport).find((a) => a.name === name)?.image ?? null;
+  const trimmed = name.trim().toLowerCase();
+  if (!trimmed) return null;
+  const inSport = athletesFor(sport).find((a) => a.name.toLowerCase() === trimmed);
+  if (inSport) return inSport.image;
+  const anywhere = ALL_ATHLETES.find((e) => e.athlete.name.toLowerCase() === trimmed);
+  return anywhere?.athlete.image ?? null;
+}
+
+/** Sport name suggestions for the sport field, matched by prefix/substring. */
+export function suggestSports(query: string): string[] {
+  const q = query.trim().toLowerCase();
+  const names = SPORTS.map((s) => s.sport);
+  if (!q) return names;
+  return names.filter((s) => s.toLowerCase().includes(q));
+}
+
+/** Player suggestions, preferring the current sport's roster, matched by substring. */
+export function suggestAthletes(query: string, sport: string, exclude: string): string[] {
+  const q = query.trim().toLowerCase();
+  const excludeLower = exclude.trim().toLowerCase();
+  const inSport = athleteNamesFor(sport);
+  const pool = inSport.length > 0 ? inSport : ALL_ATHLETES.map((e) => e.athlete.name);
+  const unique = Array.from(new Set(pool)).filter((n) => n.toLowerCase() !== excludeLower);
+  if (!q) return unique.slice(0, 8);
+  return unique.filter((n) => n.toLowerCase().includes(q)).slice(0, 8);
 }
 
 export function randomMatchup(): Matchup {

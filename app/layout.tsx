@@ -41,6 +41,14 @@ export default function RootLayout({
       lang="en"
       className={`${grotesk.variable} ${inter.variable} ${plexMono.variable} h-full antialiased`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{if(localStorage.getItem('goat-court-theme')==='light'){document.documentElement.dataset.theme='light';}}catch(e){}})();",
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

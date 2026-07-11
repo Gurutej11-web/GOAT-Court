@@ -50,20 +50,17 @@ export default function VerdictScene({
               name={winnerAthlete}
               image={winnerImg}
               size={88}
-              className="card-shadow animate-trophy ring-4 ring-violet/30"
+              className="card-shadow animate-trophy ring-4 ring-accent/30"
             />
           </div>
-          <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-cyan animate-rise">
+          <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-accent animate-rise">
             And the verdict is in{!live && " · demo mode"}
           </p>
           <h1
             className="mt-2 font-display text-3xl font-bold text-text sm:text-4xl animate-rise"
             style={{ animationDelay: "0.1s" }}
           >
-            {winnerAthlete}{" "}
-            <span className="bg-gradient-to-r from-violet-bright to-cyan bg-clip-text text-transparent">
-              is the GOAT
-            </span>
+            {winnerAthlete} <span className="text-accent">is the GOAT</span>
           </h1>
           <p className="mt-2 text-text-dim animate-rise" style={{ animationDelay: "0.2s" }}>
             {userWon
@@ -82,10 +79,10 @@ export default function VerdictScene({
               <thead>
                 <tr className="border-b border-edge bg-surface-2 text-xs">
                   <th className="px-4 py-3 text-left font-medium text-text-dim">Round</th>
-                  <th className="px-3 py-3 text-center font-medium text-violet-bright">
+                  <th className="px-3 py-3 text-center font-medium text-accent">
                     You · {caseConfig.userAthlete}
                   </th>
-                  <th className="px-3 py-3 text-center font-medium text-cyan">
+                  <th className="px-3 py-3 text-center font-medium text-neutral">
                     AI · {caseConfig.aiAthlete}
                   </th>
                 </tr>
@@ -99,14 +96,14 @@ export default function VerdictScene({
                     </td>
                     <td
                       className={`px-3 py-3 text-center font-mono text-lg ${
-                        s.user >= s.ai ? "text-violet-bright font-semibold" : "text-text-dim"
+                        s.user >= s.ai ? "text-accent font-semibold" : "text-text-dim"
                       }`}
                     >
                       {s.user}
                     </td>
                     <td
                       className={`px-3 py-3 text-center font-mono text-lg ${
-                        s.ai >= s.user ? "text-cyan font-semibold" : "text-text-dim"
+                        s.ai >= s.user ? "text-neutral font-semibold" : "text-text-dim"
                       }`}
                     >
                       {s.ai}
@@ -117,14 +114,14 @@ export default function VerdictScene({
                   <td className="px-4 py-3 text-xs font-medium text-text-dim">Total</td>
                   <td
                     className={`px-3 py-3 text-center font-mono text-xl ${
-                      userWon ? "text-violet-bright font-semibold" : "text-text-dim"
+                      userWon ? "text-accent font-semibold" : "text-text-dim"
                     }`}
                   >
                     {userTotal}
                   </td>
                   <td
                     className={`px-3 py-3 text-center font-mono text-xl ${
-                      !userWon ? "text-cyan font-semibold" : "text-text-dim"
+                      !userWon ? "text-neutral font-semibold" : "text-text-dim"
                     }`}
                   >
                     {aiTotal}
@@ -137,22 +134,22 @@ export default function VerdictScene({
 
         {/* Verdict writeup */}
         <section
-          className="card-shadow mt-6 rounded-xl border border-violet/30 bg-surface p-5 animate-rise"
+          className="card-shadow mt-6 rounded-xl border border-accent/30 bg-surface p-5 animate-rise"
           style={{ animationDelay: "0.4s" }}
         >
           <div className="flex items-start justify-between gap-3">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-violet-bright">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-accent">
               Why {winnerAthlete} won
             </h2>
             <button
               onClick={copyResult}
-              className="shrink-0 rounded-lg border border-edge px-2.5 py-1 text-xs text-text-dim hover:border-violet/50 hover:text-text transition-colors cursor-pointer"
+              className="shrink-0 rounded-lg border border-edge px-2.5 py-1 text-xs text-text-dim hover:border-accent/50 hover:text-text transition-colors cursor-pointer"
             >
               {copied ? "Copied!" : "Copy result"}
             </button>
           </div>
           <p className="mt-3 whitespace-pre-wrap leading-relaxed text-text">{verdict.opinion}</p>
-          <blockquote className="mt-4 border-l-2 border-cyan pl-4">
+          <blockquote className="mt-4 border-l-2 border-neutral pl-4">
             <p className="italic text-text-dim">&ldquo;{verdict.bestLine}&rdquo;</p>
             <cite className="mt-1 block text-xs text-text-dim/70 not-italic">
               Best line of the debate
@@ -166,13 +163,13 @@ export default function VerdictScene({
         >
           <button
             onClick={onRematch}
-            className="rounded-xl bg-gradient-to-r from-violet to-cyan px-6 py-2.5 font-display font-bold text-ink shadow-lg shadow-violet/20 hover:opacity-90 hover:scale-[1.02] transition-all cursor-pointer"
+            className="rounded-xl bg-accent px-6 py-2.5 font-display font-bold text-accent-ink shadow-lg shadow-accent/20 hover:bg-accent-bright hover:scale-[1.02] transition-all cursor-pointer"
           >
             Run it back
           </button>
           <button
             onClick={onNewCase}
-            className="rounded-xl border border-edge bg-surface px-6 py-2.5 font-display font-bold text-text hover:border-violet/60 transition-all cursor-pointer"
+            className="rounded-xl border border-edge bg-surface px-6 py-2.5 font-display font-bold text-text hover:border-accent/50 transition-all cursor-pointer"
           >
             New matchup
           </button>

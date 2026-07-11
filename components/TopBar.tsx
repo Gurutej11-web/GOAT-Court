@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 interface Props {
   onHome: () => void;
@@ -15,12 +16,12 @@ export default function TopBar({ onHome, action }: Props) {
           onClick={onHome}
           className="font-display text-sm font-bold text-text hover:opacity-80 transition-opacity cursor-pointer"
         >
-          <span className="bg-gradient-to-r from-violet-bright to-cyan bg-clip-text text-transparent">
-            GOAT
-          </span>{" "}
-          Court
+          <span className="text-accent">GOAT</span> Court
         </button>
-        {action}
+        <div className="flex items-center gap-3">
+          {action}
+          <ThemeToggle />
+        </div>
       </div>
     </div>
   );

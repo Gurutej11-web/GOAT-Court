@@ -10,8 +10,6 @@ interface Props {
   className?: string;
 }
 
-const MAX_RETRIES = 2;
-
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "?";
@@ -19,38 +17,26 @@ function initials(name: string): string {
 }
 
 export default function PlayerAvatar({ name, image, size = 64, className = "" }: Props) {
-  const [attempt, setAttempt] = useState(0);
-  const [gaveUp, setGaveUp] = useState(false);
-  const showImage = Boolean(image) && !gaveUp;
-
-  function handleError() {
-    // Wikimedia occasionally 429s a burst of simultaneous requests; a short
-    // retry clears it up almost every time before we fall back to initials.
-    if (attempt < MAX_RETRIES) {
-      setTimeout(() => setAttempt((a) => a + 1), 500 * (attempt + 1));
-    } else {
-      setGaveUp(true);
-    }
-  }
+  const [errored, setErrored] = useState(false);
+  const showImage = Boolean(image) && !errored;
 
   return (
     <div
-      className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-violet to-cyan ${className}`}
+      className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-accent ${className}`}
       style={{ width: size, height: size }}
     >
       {showImage ? (
         <Image
-          key={attempt}
           src={image as string}
           alt={name}
           fill
           sizes={`${size}px`}
           loading="eager"
           className="object-cover"
-          onError={handleError}
+          onError={() => setErrored(true)}
         />
       ) : (
-        <span className="font-display font-bold text-ink" style={{ fontSize: size * 0.34 }}>
+        <span className="font-display font-bold text-accent-ink" style={{ fontSize: size * 0.34 }}>
           {initials(name)}
         </span>
       )}

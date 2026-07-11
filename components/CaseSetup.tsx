@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { FEATURED, SPORTS, athleteNamesFor, imageFor, randomMatchup } from "@/lib/matchups";
+import { ALL_ATHLETES, FEATURED, imageFor, randomMatchup, suggestAthletes, suggestSports } from "@/lib/matchups";
 import PlayerAvatar from "@/components/PlayerAvatar";
+import AutocompleteInput from "@/components/AutocompleteInput";
+import ThemeToggle from "@/components/ThemeToggle";
 import type { CaseConfig } from "@/lib/types";
 
 interface Props {
@@ -12,17 +14,13 @@ interface Props {
   onResume: () => void;
 }
 
-type Mode = "database" | "custom";
-
 export default function CaseSetup({ live, savedAvailable, onStart, onResume }: Props) {
-  const [mode, setMode] = useState<Mode>("database");
   const [sport, setSport] = useState("");
   const [athleteA, setAthleteA] = useState("");
   const [athleteB, setAthleteB] = useState("");
   const [side, setSide] = useState<"a" | "b" | null>(null);
 
   const ready = Boolean(sport.trim() && athleteA.trim() && athleteB.trim());
-  const roster = mode === "database" ? athleteNamesFor(sport) : [];
 
   function reset() {
     setSport("");
@@ -31,13 +29,7 @@ export default function CaseSetup({ live, savedAvailable, onStart, onResume }: P
     setSide(null);
   }
 
-  function switchMode(next: Mode) {
-    setMode(next);
-    reset();
-  }
-
   function pickMatchup(newSport: string, a: string, b: string) {
-    setMode("database");
     setSport(newSport);
     setAthleteA(a);
     setAthleteB(b);
@@ -49,11 +41,27 @@ export default function CaseSetup({ live, savedAvailable, onStart, onResume }: P
     pickMatchup(r.sport, r.a, r.b);
   }
 
-  function changeSport(newSport: string) {
-    setSport(newSport);
-    setAthleteA("");
-    setAthleteB("");
+  /** If a known player is picked before a sport is chosen, fill the sport in too. */
+  function inferSport(name: string): string | undefined {
+    return ALL_ATHLETES.find((e) => e.athlete.name.toLowerCase() === name.trim().toLowerCase())?.sport;
+  }
+
+  function changeAthleteA(value: string) {
+    setAthleteA(value);
     setSide(null);
+    if (!sport.trim()) {
+      const inferred = inferSport(value);
+      if (inferred) setSport(inferred);
+    }
+  }
+
+  function changeAthleteB(value: string) {
+    setAthleteB(value);
+    setSide(null);
+    if (!sport.trim()) {
+      const inferred = inferSport(value);
+      if (inferred) setSport(inferred);
+    }
   }
 
   function start() {
@@ -65,25 +73,25 @@ export default function CaseSetup({ live, savedAvailable, onStart, onResume }: P
   }
 
   const fieldClass =
-    "w-full rounded-lg border border-edge bg-surface px-3 py-2.5 text-text placeholder:text-text-dim/50 focus:border-violet focus:outline-none focus:ring-2 focus:ring-violet/40 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-40";
+    "w-full rounded-lg border border-edge bg-surface px-3 py-2.5 text-text placeholder:text-text-dim/50 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 transition-colors";
 
-  const imgA = mode === "database" ? imageFor(sport, athleteA) : null;
-  const imgB = mode === "database" ? imageFor(sport, athleteB) : null;
+  const imgA = imageFor(sport, athleteA);
+  const imgB = imageFor(sport, athleteB);
 
   return (
     <main className="animate-screen mx-auto w-full max-w-2xl flex-1 px-4 py-12 sm:py-20">
+      <div className="flex justify-end">
+        <ThemeToggle />
+      </div>
       <header className="text-center">
         <h1 className="font-display text-4xl font-bold tracking-tight text-text sm:text-6xl">
-          <span className="bg-gradient-to-r from-violet-bright to-cyan bg-clip-text text-transparent">
-            GOAT
-          </span>{" "}
-          Court
+          <span className="text-accent">GOAT</span> Court
         </h1>
         <p className="mt-3 text-text-dim">
           Pick two legends, argue your side, let an AI judge settle it.
         </p>
         {!live && (
-          <span className="mt-3 inline-block rounded-full border border-cyan/40 bg-cyan-deep/15 px-3 py-1 text-xs text-text-dim">
+          <span className="mt-3 inline-block rounded-full border border-edge px-3 py-1 text-xs text-text-dim">
             Demo mode · no API key yet
           </span>
         )}
@@ -92,30 +100,31 @@ export default function CaseSetup({ live, savedAvailable, onStart, onResume }: P
       {savedAvailable && (
         <button
           onClick={onResume}
-          className="card-shadow mt-6 flex w-full items-center justify-between rounded-lg border border-violet/50 bg-violet/10 px-4 py-3 text-left transition-colors hover:bg-violet/15 cursor-pointer"
+          className="card-shadow mt-6 flex w-full items-center justify-between rounded-lg border border-accent/50 bg-accent/10 px-4 py-3 text-left transition-colors hover:bg-accent/15 cursor-pointer"
         >
           <span className="text-sm text-text">You've got a debate in progress.</span>
-          <span className="text-sm font-semibold text-violet-bright">Continue →</span>
+          <span className="text-sm font-semibold text-accent">Continue →</span>
         </button>
       )}
 
       <section className="mt-8">
         <div className="flex flex-wrap gap-2">
-          {FEATURED.map((r) => {
-            const isSelected = mode === "database" && sport === r.sport && athleteA === r.a && athleteB === r.b;
+          {FEATURED.map((r, i) => {
+            const isSelected = sport === r.sport && athleteA === r.a && athleteB === r.b;
             return (
               <button
                 key={`${r.a}-${r.b}`}
                 onClick={() => pickMatchup(r.sport, r.a, r.b)}
-                className={`card-shadow flex items-center gap-2 rounded-full border py-1 pl-1 pr-3.5 text-sm transition-all hover:-translate-y-0.5 cursor-pointer ${
+                style={{ animationDelay: `${i * 0.04}s` }}
+                className={`card-shadow animate-rise flex items-center gap-2 rounded-full border py-1 pl-1 pr-3.5 text-sm transition-all hover:-translate-y-0.5 cursor-pointer ${
                   isSelected
-                    ? "border-violet bg-violet/15 text-violet-bright"
-                    : "border-edge bg-surface text-text-dim hover:border-violet/60 hover:text-text"
+                    ? "border-accent bg-accent/15 text-accent"
+                    : "border-edge bg-surface text-text-dim hover:border-accent/50 hover:text-text"
                 }`}
               >
                 <span className="flex -space-x-2">
-                  <PlayerAvatar name={r.a} image={imageFor(r.sport, r.a)} size={24} className="ring-2 ring-ink" />
-                  <PlayerAvatar name={r.b} image={imageFor(r.sport, r.b)} size={24} className="ring-2 ring-ink" />
+                  <PlayerAvatar name={r.a} image={imageFor(r.sport, r.a)} size={24} className="ring-2 ring-page" />
+                  <PlayerAvatar name={r.b} image={imageFor(r.sport, r.b)} size={24} className="ring-2 ring-page" />
                 </span>
                 <span>
                   {r.a} <span className="opacity-50">vs</span> {r.b}
@@ -126,7 +135,7 @@ export default function CaseSetup({ live, savedAvailable, onStart, onResume }: P
           })}
           <button
             onClick={surpriseMe}
-            className="card-shadow rounded-full border border-dashed border-cyan/60 px-3.5 py-1.5 text-sm text-cyan transition-all hover:-translate-y-0.5 hover:bg-cyan/10 cursor-pointer"
+            className="card-shadow rounded-full border border-dashed border-edge px-3.5 py-1.5 text-sm text-text-dim transition-all hover:-translate-y-0.5 hover:border-accent/50 hover:text-accent cursor-pointer"
           >
             🎲 Surprise me
           </button>
@@ -134,134 +143,61 @@ export default function CaseSetup({ live, savedAvailable, onStart, onResume }: P
       </section>
 
       <section className="mt-8">
-        <div className="card-shadow flex gap-1 rounded-lg border border-edge bg-surface p-1 text-sm">
-          <button
-            onClick={() => switchMode("database")}
-            className={`flex-1 rounded-md py-1.5 transition-colors cursor-pointer ${
-              mode === "database" ? "bg-violet/20 text-violet-bright" : "text-text-dim hover:text-text"
-            }`}
-          >
-            From the database
-          </button>
-          <button
-            onClick={() => switchMode("custom")}
-            className={`flex-1 rounded-md py-1.5 transition-colors cursor-pointer ${
-              mode === "custom" ? "bg-violet/20 text-violet-bright" : "text-text-dim hover:text-text"
-            }`}
-          >
-            Type your own
-          </button>
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-text-dim">
+          Or type any matchup
+        </h2>
+        <div className="mt-3 grid gap-2 sm:grid-cols-3">
+          <AutocompleteInput
+            value={sport}
+            onChange={(v) => {
+              setSport(v);
+              setSide(null);
+            }}
+            suggestions={suggestSports(sport)}
+            placeholder="Sport"
+            ariaLabel="Sport"
+            className={fieldClass}
+          />
+          <AutocompleteInput
+            value={athleteA}
+            onChange={changeAthleteA}
+            suggestions={suggestAthletes(athleteA, sport, athleteB)}
+            placeholder="First player"
+            ariaLabel="First player"
+            className={fieldClass}
+          />
+          <AutocompleteInput
+            value={athleteB}
+            onChange={changeAthleteB}
+            suggestions={suggestAthletes(athleteB, sport, athleteA)}
+            placeholder="Second player"
+            ariaLabel="Second player"
+            className={fieldClass}
+          />
         </div>
-
-        {mode === "database" ? (
-          <div className="mt-3 grid gap-2 sm:grid-cols-3">
-            <select
-              value={sport}
-              onChange={(e) => changeSport(e.target.value)}
-              className={fieldClass}
-              aria-label="Sport"
-            >
-              <option value="">Sport</option>
-              {SPORTS.map((s) => (
-                <option key={s.sport} value={s.sport}>
-                  {s.sport}
-                </option>
-              ))}
-            </select>
-            <select
-              value={athleteA}
-              onChange={(e) => {
-                setAthleteA(e.target.value);
-                setSide(null);
-              }}
-              disabled={!sport}
-              className={fieldClass}
-              aria-label="First player"
-            >
-              <option value="">First player</option>
-              {roster.filter((n) => n !== athleteB).map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-            <select
-              value={athleteB}
-              onChange={(e) => {
-                setAthleteB(e.target.value);
-                setSide(null);
-              }}
-              disabled={!sport}
-              className={fieldClass}
-              aria-label="Second player"
-            >
-              <option value="">Second player</option>
-              {roster.filter((n) => n !== athleteA).map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : (
-          <div className="mt-3 grid gap-2 sm:grid-cols-3">
-            <input
-              value={sport}
-              onChange={(e) => {
-                setSport(e.target.value);
-                setSide(null);
-              }}
-              placeholder="Sport (e.g. Chess)"
-              className={fieldClass}
-              aria-label="Sport"
-            />
-            <input
-              value={athleteA}
-              onChange={(e) => {
-                setAthleteA(e.target.value);
-                setSide(null);
-              }}
-              placeholder="First player"
-              className={fieldClass}
-              aria-label="First player"
-            />
-            <input
-              value={athleteB}
-              onChange={(e) => {
-                setAthleteB(e.target.value);
-                setSide(null);
-              }}
-              placeholder="Second player"
-              className={fieldClass}
-              aria-label="Second player"
-            />
-          </div>
-        )}
-        {mode === "custom" && (
-          <p className="mt-2 text-xs text-text-dim/70">
-            The AI still won't make up stats for players it doesn't know well. It'll argue on what it
-            actually knows.
-          </p>
-        )}
+        <p className="mt-2 text-xs text-text-dim/70">
+          Start typing for suggestions from our growing roster, or enter anyone. The AI won't invent
+          stats for players it doesn't know well.
+        </p>
       </section>
 
       {ready && (
         <section className="mt-8">
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-2 gap-3">
             {([["a", athleteA, imgA], ["b", athleteB, imgB]] as const).map(([key, name, img]) => (
               <button
                 key={key}
                 onClick={() => setSide(key)}
-                className={`card-shadow flex items-center gap-3 rounded-xl border p-4 text-left transition-all hover:-translate-y-0.5 cursor-pointer ${
+                className={`card-shadow flex items-center gap-3 rounded-xl border p-3 text-left transition-all hover:-translate-y-0.5 sm:p-4 cursor-pointer ${
                   side === key
-                    ? "border-violet bg-violet/10 shadow-[0_0_24px_rgba(139,92,246,0.25)]"
-                    : "border-edge bg-surface hover:border-violet/50"
+                    ? "border-accent bg-accent/10 shadow-[0_0_20px_rgba(245,165,36,0.2)]"
+                    : "border-edge bg-surface hover:border-accent/50"
                 }`}
               >
-                <PlayerAvatar name={name} image={img} size={48} />
-                <div>
-                  <p className="font-display text-lg font-bold text-text">{name}</p>
-                  <p className="text-sm text-text-dim">
+                <PlayerAvatar name={name} image={img} size={44} />
+                <div className="min-w-0">
+                  <p className="truncate font-display text-base font-bold text-text sm:text-lg">{name}</p>
+                  <p className="truncate text-xs text-text-dim sm:text-sm">
                     {side === key ? "You've got this side" : "Tap to argue for them"}
                   </p>
                 </div>
@@ -275,7 +211,7 @@ export default function CaseSetup({ live, savedAvailable, onStart, onResume }: P
         <button
           onClick={start}
           disabled={!ready || !side}
-          className="rounded-xl bg-gradient-to-r from-violet to-cyan px-8 py-3 font-display text-lg font-bold text-ink shadow-lg shadow-violet/20 transition-all hover:opacity-90 hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-30 disabled:shadow-none disabled:hover:scale-100 cursor-pointer"
+          className="rounded-xl bg-accent px-8 py-3 font-display text-lg font-bold text-accent-ink shadow-lg shadow-accent/20 transition-all hover:bg-accent-bright hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-30 disabled:shadow-none disabled:hover:scale-100 cursor-pointer"
         >
           Start the debate
         </button>

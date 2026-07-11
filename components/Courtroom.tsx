@@ -105,7 +105,7 @@ export default function Courtroom({
                   key={p}
                   className={`rounded-full border px-2.5 py-1 text-[11px] font-medium sm:text-xs ${
                     state === "now"
-                      ? "border-violet bg-violet/15 text-violet-bright"
+                      ? "border-accent bg-accent/15 text-accent"
                       : state === "done"
                         ? "border-edge bg-surface text-text-dim line-through"
                         : "border-edge/60 text-text-dim/50"
@@ -136,8 +136,8 @@ export default function Courtroom({
               key={i}
               className={`card-shadow animate-rise flex gap-3 rounded-xl border p-4 ${
                 entry.speaker === "user"
-                  ? "border-violet/40 bg-surface"
-                  : "border-cyan/40 bg-surface-2"
+                  ? "border-accent/40 bg-surface"
+                  : "border-neutral/40 bg-surface-2"
               }`}
             >
               <PlayerAvatar
@@ -149,7 +149,7 @@ export default function Courtroom({
               <div>
                 <p
                   className={`text-[11px] font-semibold uppercase tracking-wide ${
-                    entry.speaker === "user" ? "text-violet-bright" : "text-cyan"
+                    entry.speaker === "user" ? "text-accent" : "text-neutral"
                   }`}
                 >
                   {entry.speaker === "user" ? "You" : "AI"} · {entry.athlete} ·{" "}
@@ -162,7 +162,7 @@ export default function Courtroom({
 
           {/* Streaming AI argument */}
           {aiStreaming && (
-            <article className="card-shadow animate-rise flex gap-3 rounded-xl border border-cyan/40 bg-surface-2 p-4">
+            <article className="card-shadow animate-rise flex gap-3 rounded-xl border border-neutral/40 bg-surface-2 p-4">
               <PlayerAvatar
                 name={caseConfig.aiAthlete}
                 image={aiImg}
@@ -170,17 +170,17 @@ export default function Courtroom({
                 className="mt-0.5"
               />
               <div className="flex-1">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-cyan">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral">
                   AI · {caseConfig.aiAthlete} · {PHASE_LABELS[phase]}
                 </p>
                 {aiDraft ? (
                   <p className="mt-1 whitespace-pre-wrap leading-relaxed text-text">
                     {aiDraft}
-                    <span className="ml-0.5 inline-block h-4 w-2 animate-pulse-soft bg-cyan align-middle" />
+                    <span className="ml-0.5 inline-block h-4 w-2 animate-pulse-soft bg-neutral align-middle" />
                   </p>
                 ) : (
                   <div className="mt-1 flex items-center gap-2">
-                    <span className="animate-pop inline-block rounded-full border-2 border-cyan px-2 py-0.5 text-xs font-bold tracking-wide text-cyan">
+                    <span className="animate-pop inline-block rounded-full border-2 border-neutral px-2 py-0.5 text-xs font-bold tracking-wide text-neutral">
                       🔥 clapping back
                     </span>
                     <span className="animate-pulse-soft text-sm text-text-dim">thinking…</span>
@@ -192,7 +192,7 @@ export default function Courtroom({
 
           {/* Judge deliberating */}
           {judging && (
-            <article className="card-shadow animate-rise rounded-xl border border-violet/50 bg-surface p-6 text-center">
+            <article className="card-shadow animate-rise rounded-xl border border-accent/50 bg-surface p-6 text-center">
               <span className="animate-trophy inline-block text-3xl">🏆</span>
               <p className="mt-2 text-text">The AI judge is tallying the scores…</p>
             </article>
@@ -203,14 +203,14 @@ export default function Courtroom({
         {error && (
           <div
             role="alert"
-            className="card-shadow mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-cyan bg-cyan-deep/20 px-4 py-3"
+            className="card-shadow mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-neutral bg-surface-2 px-4 py-3"
           >
             <p className="text-sm text-text">
-              <span className="font-bold text-cyan">Oops:</span> {error}
+              <span className="font-bold text-text">Oops:</span> {error}
             </p>
             <button
               onClick={onRetry}
-              className="rounded-lg border border-cyan px-3 py-1 text-xs font-medium text-text hover:bg-cyan/20 transition-colors cursor-pointer"
+              className="rounded-lg border border-edge px-3 py-1 text-xs font-medium text-text hover:border-accent/50 transition-colors cursor-pointer"
             >
               Retry
             </button>
@@ -221,7 +221,7 @@ export default function Courtroom({
         {!judging && (
           <section className="card-shadow mt-4 rounded-xl border border-edge bg-surface p-3">
             <div className="flex items-baseline justify-between">
-              <label htmlFor="argument" className="text-xs font-semibold text-violet-bright">
+              <label htmlFor="argument" className="text-xs font-semibold text-accent">
                 {PHASE_LABELS[phase]}
               </label>
               <span className="text-xs text-text-dim">
@@ -238,14 +238,14 @@ export default function Courtroom({
               placeholder={PLACEHOLDERS[phase]}
               rows={4}
               disabled={busy}
-              className="mt-2 w-full resize-y rounded-lg border border-edge bg-ink/60 px-3 py-2 leading-relaxed text-text placeholder:text-text-dim/50 focus:border-violet focus:outline-none focus:ring-2 focus:ring-violet/40 disabled:opacity-50 transition-colors"
+              className="mt-2 w-full resize-y rounded-lg border border-edge bg-page/60 px-3 py-2 leading-relaxed text-text placeholder:text-text-dim/50 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 disabled:opacity-50 transition-colors"
             />
             <div className="mt-2 flex items-center justify-between">
               <p className="hidden text-xs text-text-dim/60 sm:block">⌘/Ctrl + Enter to send</p>
               <button
                 onClick={submit}
                 disabled={!draft.trim() || busy}
-                className="ml-auto rounded-lg bg-gradient-to-r from-violet to-cyan px-5 py-2 font-display font-bold text-ink shadow-lg shadow-violet/20 transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-30 disabled:shadow-none cursor-pointer"
+                className="ml-auto rounded-lg bg-accent px-5 py-2 font-display font-bold text-accent-ink shadow-lg shadow-accent/20 transition-all hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-30 disabled:shadow-none cursor-pointer"
               >
                 {aiStreaming ? "AI is clapping back…" : "Send it"}
               </button>
