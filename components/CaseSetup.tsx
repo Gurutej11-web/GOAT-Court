@@ -108,7 +108,7 @@ export default function CaseSetup({ live, savedAvailable, onStart, onResume }: P
       )}
 
       <section className="mt-8">
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {FEATURED.map((r, i) => {
             const isSelected = sport === r.sport && athleteA === r.a && athleteB === r.b;
             return (
@@ -116,20 +116,24 @@ export default function CaseSetup({ live, savedAvailable, onStart, onResume }: P
                 key={`${r.a}-${r.b}`}
                 onClick={() => pickMatchup(r.sport, r.a, r.b)}
                 style={{ animationDelay: `${i * 0.04}s` }}
-                className={`card-shadow animate-rise flex items-center gap-2 rounded-full border py-1 pl-1 pr-3.5 text-sm transition-all hover:-translate-y-0.5 cursor-pointer ${
+                className={`card-shadow animate-rise flex w-full items-center justify-between gap-2 rounded-full border py-1 pl-1 pr-3.5 text-sm transition-all hover:-translate-y-0.5 cursor-pointer ${
                   isSelected
                     ? "border-accent bg-accent/15 text-accent"
                     : "border-edge bg-surface text-text-dim hover:border-accent/50 hover:text-text"
                 }`}
               >
-                <span className="flex -space-x-2">
-                  <PlayerAvatar name={r.a} image={imageFor(r.sport, r.a)} size={24} className="ring-2 ring-page" />
-                  <PlayerAvatar name={r.b} image={imageFor(r.sport, r.b)} size={24} className="ring-2 ring-page" />
+                <span className="flex items-center gap-2 truncate">
+                  <span className="flex shrink-0 -space-x-2">
+                    <PlayerAvatar name={r.a} image={imageFor(r.sport, r.a)} size={24} className="ring-2 ring-page" />
+                    <PlayerAvatar name={r.b} image={imageFor(r.sport, r.b)} size={24} className="ring-2 ring-page" />
+                  </span>
+                  <span className="truncate">
+                    {r.a} <span className="opacity-50">vs</span> {r.b}
+                  </span>
                 </span>
-                <span>
-                  {r.a} <span className="opacity-50">vs</span> {r.b}
+                <span className="shrink-0 text-[10px] uppercase tracking-wide text-text-dim/60">
+                  {r.sport}
                 </span>
-                <span className="text-[10px] uppercase tracking-wide text-text-dim/60">{r.sport}</span>
               </button>
             );
           })}

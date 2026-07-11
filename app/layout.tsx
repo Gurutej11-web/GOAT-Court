@@ -45,7 +45,7 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "(function(){try{if(localStorage.getItem('goat-court-theme')==='light'){document.documentElement.dataset.theme='light';}}catch(e){}})();",
+              "(function(){try{if(localStorage.getItem('goat-court-theme')==='dark'){document.documentElement.dataset.theme='dark';}}catch(e){}})();",
           }}
         />
       </head>
