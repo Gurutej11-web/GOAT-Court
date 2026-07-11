@@ -4,25 +4,30 @@
 
 ## How it works
 
-1. **Pick a matchup**: grab one of the popular picks (Jordan vs LeBron, Messi vs Ronaldo, Federer vs Nadal), hit surprise me, or type any sport and any two players (with live suggestions from the roster as you type). Filter the picks by sport if you know what you're after.
+1. **Pick a matchup**: grab one of the popular picks (Jordan vs LeBron, Messi vs Ronaldo, Federer vs Nadal), check the debate of the day, hit surprise me, or type any sport and any two players (with live suggestions from the roster as you type). Filter the picks by sport if you know what you're after.
 2. **Pick your opponent**: debate the AI, or pass the device to a friend and debate them instead.
-3. **Pick your side**: argue for one legend, your opponent argues for the other.
-4. **Go three rounds**: make your case, clap back, bring it home. The AI streams its response live (or your friend types theirs), citing real championships, records, and career numbers.
-5. **Get the verdict**: the AI judge scores every round for both sides (evidence, logic, persuasion), picks a winner, writes up why, and calls out the best line of the debate. Argue well and you can beat the machine.
+3. **Pick your side**: argue for one legend, your opponent argues for the other. Check the pre-debate odds if you're curious how it "should" go.
+4. **Go three rounds**: make your case, clap back, bring it home. The AI streams its response live (or your friend types theirs), citing real championships, records, and career numbers. Stuck? Ask for a hint or get feedback on your draft before you send it.
+5. **Get the verdict**: the AI judge (strict, generous, or purely statistical, your call) scores every round for both sides, picks a winner, writes up why, and calls out the best line of the debate. Argue well and you can beat the machine.
 
 ## Features
 
 - **Player photos** for every athlete in the database (self-hosted, not hotlinked), with a generated initials avatar for anyone typed in by hand.
 - **One unified search**: type any sport or player and get live autocomplete suggestions from a roster of 40+ athletes across 7 sports; nothing is locked behind a picker. Filter popular matchups by sport.
-- **Light and dark mode**, toggleable, saved per-device (light by default).
-- **AI style picker**: Balanced, Chill, Ruthless, or Stats Nerd — changes how the AI argues.
-- **Debate a friend**: local pass-and-play mode — you and a friend take turns arguing on the same device, with the AI still judging at the end.
+- **Light, dark, and high-contrast themes**, toggleable, saved per-device (light by default).
+- **AI style picker**: Balanced, Chill, Ruthless, or Stats Nerd, changes how the AI argues.
+- **Judge personality picker**: Strict, Generous, or Statistical, changes how the verdict gets scored.
+- **Pre-debate odds**: a quick AI-estimated prediction before you start, to compare against the actual outcome.
+- **Coach mode & hints**: get feedback on your draft argument, or ask for a suggested angle if you're stuck.
+- **Debate a friend**: local pass-and-play mode, you and a friend take turns arguing on the same device, with the AI still judging at the end.
 - **Challenge links**: share a matchup as a URL; whoever opens it gets the same matchup pre-filled (defaulted to the opposite side) to debate themselves.
 - **Save & resume**: your in-progress debate is saved to the browser automatically; leave and come back anytime.
-- **Debate history**: every finished debate is logged locally, with a win/loss/streak record shown on the home screen.
-- **Tournament mode**: pick a champion and two opponents, then fight through a semifinal and final to be crowned bracket GOAT.
-- **Copy result** or **share a verdict image**: a generated shareable graphic, not just plain text.
+- **Debate history & personal dashboard**: every finished debate is logged locally, with win/loss/streak, favorite sport and pick, and average argument length.
+- **Debate of the day**: the same featured matchup for everyone, every day.
+- **Tournament mode**: pick a champion and three opponents, then fight through a quarterfinal, semifinal, and final to be crowned bracket GOAT.
+- **Copy result**, **share a verdict image**, or **export the full transcript** as a text file.
 - **Voice input**: dictate your argument instead of typing, where the browser supports it.
+- **Installable app**: add it to your home screen; the app shell works offline in demo mode.
 - **Per-round timer**, onboarding tips for first-time visitors, and smooth transitions/animations throughout.
 
 ## Run it locally
@@ -43,10 +48,13 @@ GROQ_API_KEY=gsk_...
 ## Stack
 
 - **Next.js 16** (App Router) + React 19 + TypeScript (strict)
-- **Tailwind CSS v4**: light/dark theme with a single gold accent (no gradients), Space Grotesk (display), Inter (body), IBM Plex Mono (stats)
+- **Tailwind CSS v4**: light/dark/high-contrast theming with a single gold accent (no gradients), Space Grotesk (display), Inter (body), IBM Plex Mono (stats)
 - **Groq SDK**: `llama-3.3-70b-versatile` by default (override with `GOAT_MODEL`)
   - `/api/counsel` streams the AI debater's argument token-by-token
   - `/api/judge` returns a structured, scored verdict as JSON
+  - `/api/odds` returns a quick pre-debate win-probability estimate
+  - `/api/assist` returns coach feedback or a hint, depending on request type
+- A service worker (`public/sw.js`) caches the app shell for offline/installed use
 
 ## Architecture
 
@@ -56,11 +64,16 @@ app/
   GoatCourt.tsx       → client state machine: setup → 3 rounds → verdict
   api/counsel/route.ts→ streaming argument (demo fallback streams canned text)
   api/judge/route.ts  → structured verdict, retry-once, demo fallback
+  api/odds/route.ts   → pre-debate win-probability estimate
+  api/assist/route.ts → coach feedback / in-debate hints
 components/           → CaseSetup, Courtroom, VerdictScene, TournamentMode,
-                         AutocompleteInput, ThemeToggle, HistoryPanel
+                         Dashboard, HistoryPanel, OddsPreview,
+                         AutocompleteInput, ThemeToggle
 lib/                  → types, prompts, sports/player database, demo scripts,
-                         stats/history persistence, shareable-image generation
+                         stats/history/dashboard persistence, daily matchup,
+                         shareable-image generation
 public/players/        → self-hosted athlete photos
+public/manifest.json, public/sw.js → PWA install + offline shell
 ```
 
 ## The database
@@ -71,6 +84,7 @@ The roster covers basketball, soccer, tennis, American football, boxing, cricket
 
 - Stats come from the model's knowledge, not a live sports API.
 - Demo mode has fully-written stat-backed scripts only for Jordan/LeBron; other matchups get rhetorical (stat-free) scripts by design, to avoid fabricating numbers.
-- Save/resume, stats, and history use browser localStorage, so they're per-device: there's no account system or cross-device sync.
+- Save/resume, stats, history, and the dashboard use browser localStorage, so they're per-device: there's no account system or cross-device sync.
 - "Debate a friend" is local pass-and-play on one device, not real-time remote multiplayer (that would need a backend this project doesn't have).
 - Voice input depends on the browser's Web Speech API support (widely available in Chrome-based browsers, not in all browsers).
+- Offline support covers the app shell and demo mode; live AI calls still need a connection.

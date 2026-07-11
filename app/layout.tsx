@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Inter, IBM_Plex_Mono } from "next/font/google";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import "./globals.css";
 
 const grotesk = Space_Grotesk({
@@ -23,12 +24,17 @@ export const metadata: Metadata = {
   title: "GOAT Court: Pick Two Legends, Settle the Debate",
   description:
     "Argue your athlete is the greatest of all time against an AI that fires back with real stats, then let an AI judge decide. Basketball, soccer, tennis, football, and boxing legends.",
+  manifest: "/manifest.json",
   openGraph: {
     title: "GOAT Court: Pick Two Legends, Settle the Debate",
     description:
       "Pick two sports legends, argue your case against an AI, and let the AI judge decide who's the GOAT.",
     type: "website",
   },
+};
+
+export const viewport = {
+  themeColor: "#c2760a",
 };
 
 export default function RootLayout({
@@ -45,11 +51,14 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "(function(){try{if(localStorage.getItem('goat-court-theme')==='dark'){document.documentElement.dataset.theme='dark';}}catch(e){}})();",
+              "(function(){try{var t=localStorage.getItem('goat-court-theme');if(t==='dark'||t==='contrast'){document.documentElement.dataset.theme=t;}}catch(e){}})();",
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <ServiceWorkerRegister />
+        {children}
+      </body>
     </html>
   );
 }
