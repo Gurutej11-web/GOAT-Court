@@ -82,6 +82,24 @@ export function addHistoryEntry(entry: Omit<HistoryEntry, "id" | "timestamp">): 
   return withNew;
 }
 
+export function deleteHistoryEntry(id: string): HistoryEntry[] {
+  const list = loadHistory().filter((e) => e.id !== id);
+  try {
+    window.localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+  } catch {
+    // storage unavailable, nothing to do
+  }
+  return list;
+}
+
+export function clearHistory(): void {
+  try {
+    window.localStorage.removeItem(HISTORY_KEY);
+  } catch {
+    // storage unavailable, nothing to do
+  }
+}
+
 function mostFrequent(values: string[]): string | null {
   if (values.length === 0) return null;
   const counts = new Map<string, number>();

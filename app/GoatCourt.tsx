@@ -306,6 +306,7 @@ export default function GoatCourt({ live }: { live: boolean }) {
       onSubmit={submitArgument}
       onRetry={retry}
       onBack={backToSetup}
+      onDelete={newCase}
     />
   );
 }

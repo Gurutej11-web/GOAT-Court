@@ -19,6 +19,7 @@ interface Props {
   onSubmit: (text: string) => void;
   onRetry: () => void;
   onBack: () => void;
+  onDelete: () => void;
 }
 
 const PLACEHOLDERS: Record<Phase, string> = {
@@ -51,8 +52,10 @@ export default function Courtroom({
   onSubmit,
   onRetry,
   onBack,
+  onDelete,
 }: Props) {
   const [draft, setDraft] = useState("");
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [passGateOpen, setPassGateOpen] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(ROUND_SECONDS);
   const [listening, setListening] = useState(false);
@@ -172,12 +175,38 @@ export default function Courtroom({
       <TopBar
         onHome={onBack}
         action={
-          <button
-            onClick={onBack}
-            className="text-sm text-text-dim hover:text-text transition-colors cursor-pointer"
-          >
-            Save &amp; exit
-          </button>
+          confirmingDelete ? (
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-text-dim">Delete this debate?</span>
+              <button
+                onClick={onDelete}
+                className="rounded-lg border border-neutral px-2.5 py-1 text-neutral transition-colors hover:bg-neutral/10 cursor-pointer"
+              >
+                Yes, delete
+              </button>
+              <button
+                onClick={() => setConfirmingDelete(false)}
+                className="rounded-lg border border-edge px-2.5 py-1 text-text-dim transition-colors hover:text-text cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setConfirmingDelete(true)}
+                className="text-sm text-text-dim transition-colors hover:text-neutral cursor-pointer"
+              >
+                Delete
+              </button>
+              <button
+                onClick={onBack}
+                className="text-sm text-text-dim hover:text-text transition-colors cursor-pointer"
+              >
+                Save &amp; exit
+              </button>
+            </div>
+          )
         }
       />
       <main className="animate-screen mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 py-6">

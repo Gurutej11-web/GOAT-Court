@@ -314,6 +314,7 @@ export default function TournamentMode({ live, onExit }: Props) {
           onSubmit={submitArgument}
           onRetry={retry}
           onBack={onExit}
+          onDelete={restartSetup}
         />
       </>
     );

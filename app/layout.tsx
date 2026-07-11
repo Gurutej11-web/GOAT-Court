@@ -46,6 +46,7 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${grotesk.variable} ${inter.variable} ${plexMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <head>
         <script

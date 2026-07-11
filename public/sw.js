@@ -1,4 +1,4 @@
-const CACHE_NAME = "goat-court-shell-v1";
+const CACHE_NAME = "goat-court-shell-v2";
 const SHELL_URL = "/";
 
 self.addEventListener("install", (event) => {
@@ -19,8 +19,10 @@ self.addEventListener("activate", (event) => {
 
 // Network-first for navigations (so you always get the latest page online),
 // falling back to the cached app shell when offline. Static Next.js assets
-// are cache-first since they're immutable, hashed files. API routes and
-// everything else just pass through to the network as normal.
+// use stale-while-revalidate: served instantly from cache if present, but
+// always re-fetched in the background so the cache self-heals after a new
+// deploy instead of pinning stale JS forever. API routes and everything
+// else just pass through to the network as normal.
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;
@@ -42,14 +44,15 @@ self.addEventListener("fetch", (event) => {
   if (url.pathname.startsWith("/_next/static/")) {
     event.respondWith(
       caches.open(CACHE_NAME).then((cache) =>
-        cache.match(request).then(
-          (cached) =>
-            cached ||
-            fetch(request).then((response) => {
+        cache.match(request).then((cached) => {
+          const network = fetch(request)
+            .then((response) => {
               cache.put(request, response.clone());
               return response;
-            }),
-        ),
+            })
+            .catch(() => cached);
+          return cached || network;
+        }),
       ),
     );
   }
