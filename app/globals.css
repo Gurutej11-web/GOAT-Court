@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+@theme {
+  /* Courtroom palette: dark mahogany, parchment, brass, judicial crimson */
+  --color-bench: #16110d;
+  --color-panel: #211a13;
+  --color-panel-2: #2b2218;
+  --color-parchment: #ece3cf;
+  --color-parchment-dim: #b0a288;
+  --color-brass: #c9a227;
+  --color-brass-bright: #e6c258;
+  --color-crimson: #a03a34;
+  --color-crimson-deep: #6e2622;
+  --color-line: #3b2f21;
+
+  --font-display: var(--font-caslon), "Georgia", serif;
+  --font-sans: var(--font-public), system-ui, sans-serif;
+  --font-mono: var(--font-plex), ui-monospace, monospace;
+}
+
+body {
+  background: var(--color-bench);
+  color: var(--color-parchment);
+  font-family: var(--font-sans);
+  /* subtle brass glow above, shadow below — courtroom under lamplight */
+  background-image:
+    radial-gradient(ellipse 90% 60% at 50% -10%, rgba(201, 162, 39, 0.07), transparent),
+    radial-gradient(ellipse 120% 90% at 50% 110%, rgba(0, 0, 0, 0.55), transparent);
+  background-attachment: fixed;
+  min-height: 100dvh;
+}
+
+::selection {
+  background: var(--color-brass);
+  color: var(--color-bench);
+}
+
+@keyframes gavel-slam {
+  0% { transform: rotate(-38deg) translateY(-10px); opacity: 0; }
+  55% { transform: rotate(8deg) translateY(2px); opacity: 1; }
+  75% { transform: rotate(-6deg); }
+  100% { transform: rotate(0deg); }
+}
+.animate-gavel { animation: gavel-slam 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-rise { animation: rise-in 0.45s ease-out both; }
+
+@keyframes objection-pop {
+  0% { transform: scale(0.4) rotate(-8deg); opacity: 0; }
+  60% { transform: scale(1.12) rotate(2deg); opacity: 1; }
+  100% { transform: scale(1) rotate(-2deg); opacity: 1; }
+}
+.animate-objection { animation: objection-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+.animate-pulse-soft { animation: pulse-soft 1.6s ease-in-out infinite; }
+
+.transcript-scroll::-webkit-scrollbar { width: 8px; }
+.transcript-scroll::-webkit-scrollbar-thumb { background: var(--color-line); border-radius: 4px; }
+.transcript-scroll::-webkit-scrollbar-track { background: transparent; }
