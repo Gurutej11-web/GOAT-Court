@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import Groq from "groq-sdk";
 import { counselSystem, counselUserMessage, MODEL } from "@/lib/prompts";
 import { demoCounselArgument } from "@/lib/demo";
 import type { CaseConfig, Phase, TranscriptEntry } from "@/lib/types";
@@ -55,31 +55,37 @@ export async function POST(req: Request) {
   }
   const { caseConfig, transcript, phase } = body;
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.GROQ_API_KEY) {
     return demoStream(demoCounselArgument(caseConfig, phase));
   }
 
-  const client = new Anthropic();
-  const stream = client.messages.stream({
-    model: MODEL,
-    max_tokens: 1024,
-    system: counselSystem(caseConfig),
-    messages: [{ role: "user", content: counselUserMessage(caseConfig, transcript, phase) }],
-  });
+  const client = new Groq();
+
+  let stream: Awaited<ReturnType<typeof client.chat.completions.create>>;
+  try {
+    stream = await client.chat.completions.create({
+      model: MODEL,
+      max_tokens: 1024,
+      stream: true,
+      messages: [
+        { role: "system", content: counselSystem(caseConfig) },
+        { role: "user", content: counselUserMessage(caseConfig, transcript, phase) },
+      ],
+    });
+  } catch (err) {
+    console.error("counsel request error:", err);
+    return Response.json(
+      { error: "The AI debater couldn't be reached. Check GROQ_API_KEY and retry." },
+      { status: 500 },
+    );
+  }
 
   const readable = new ReadableStream<Uint8Array>({
     async start(controller) {
       try {
-        for await (const event of stream) {
-          if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-            controller.enqueue(encoder.encode(event.delta.text));
-          }
-        }
-        const final = await stream.finalMessage();
-        if (final.stop_reason === "refusal") {
-          controller.enqueue(
-            encoder.encode("Your Honor, counsel declines to argue this matter. (The AI refused this request — try a different matchup.)"),
-          );
+        for await (const chunk of stream as AsyncIterable<Groq.Chat.Completions.ChatCompletionChunk>) {
+          const text = chunk.choices[0]?.delta?.content;
+          if (text) controller.enqueue(encoder.encode(text));
         }
         controller.close();
       } catch (err) {

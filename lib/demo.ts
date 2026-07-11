@@ -1,31 +1,31 @@
 import type { CaseConfig, Phase, TranscriptEntry, Verdict } from "./types";
 
 /**
- * Demo mode — used when no ANTHROPIC_API_KEY is configured, so the full trial
+ * Demo mode — used when no GROQ_API_KEY is configured, so the full debate
  * flow always works on stage. Jordan and LeBron get fully-written arguments
  * with real career stats; any other athlete gets a stat-free rhetorical script
  * (we never fabricate numbers).
  */
 
 const JORDAN: Record<Phase, string> = {
-  opening: `Your Honor, the defense will speak of longevity and totals. The prosecution deals in perfection. Michael Jordan went to six NBA Finals and won six — six for six, six Finals MVPs, undefeated on the game's greatest stage. Five regular-season MVPs. Ten scoring titles. A career average of 30.1 points per game, the highest in the history of the sport. Defensive Player of the Year in 1988 — a scoring champion who was also the most feared defender on the floor. The court is asked to define greatness. Greatness is never, not once, letting a Finals slip away. The other side must explain away lost Finals; my client has none to explain.`,
-  rebuttal: `Counsel gestures at accumulation, Your Honor, as if greatness were a savings account. Strip the era down: Jordan won ten scoring titles in the most physical, hand-checking era the league has known — no zone-friendly spacing, no friendly whistles. When it mattered most, he elevated: 33.4 points per game in the playoffs, the highest postseason average ever recorded. Two three-peats, separated by a baseball sabbatical, dismantling entire dynasties-in-waiting. My opponent's client needed super-teams assembled by committee; Jordan turned one franchise into an empire and never once required a rescue. Volume is what you compile when perfection is out of reach.`,
-  closing: `Your Honor, when this trial began I promised the court perfection, and the record has delivered it: six Finals, six rings, six Finals MVPs, 30.1 a game for a career, ten scoring crowns, a Defensive Player of the Year trophy. The defense asks you to reward endurance. But the question before this court is not who lasted longest — it is who stood highest. Every player who followed, including the gentleman at the opposing table, grew up imitating Michael Jordan. Nobody imitates second place. The prosecution rests, Your Honor — and unlike the opposition's client in June, it rests undefeated.`,
+  opening: `Let's start with the receipts: six trips to the Finals, six rings — six for six, undefeated on the biggest stage in the sport. Five regular-season MVPs. Ten scoring titles. A career average of 30.1 points a game, still the highest in NBA history. Defensive Player of the Year in 1988 — a scoring champion who was also the most feared defender on the floor. You want to talk greatness? Greatness is never blowing a Finals. Not once. My guy has zero to explain away.`,
+  rebuttal: `Counsel's whole pitch is "he stuck around longer," like that's the point. Look at the era: ten scoring titles in the most physical, hand-checking basketball the league has ever played — no cushy spacing, no friendly whistles. And when it mattered most, he leveled up: 33.4 points a game in the playoffs, the highest postseason average ever recorded. Two three-peats, split by a baseball detour, and he still buried whole dynasties. Other guy needed a super-team assembled by committee. Mine turned one city into an empire, solo.`,
+  closing: `Here's the whole case in one breath: six Finals, six rings, six Finals MVPs, 30.1 a night for a career, ten scoring crowns, a Defensive Player of the Year trophy. You want to reward whoever lasted longest — I'm asking who stood the highest. Every player who came after, including the guy on the other side of this debate, grew up trying to be Michael Jordan. Nobody grows up wanting to be second place. And unlike some people's Junes, mine finishes undefeated.`,
 };
 
 const LEBRON: Record<Phase, string> = {
-  opening: `Your Honor, the case for LeBron James is written in the record book itself. The all-time leading scorer in NBA history — more than 40,000 points, a summit no one had ever reached. Four championships won with three different franchises, each one a different mountain climbed. Four MVPs, twenty All-Star selections, twenty consecutive seasons of excellence — and in year twenty-one, still an All-NBA player. He is top five all-time in scoring AND assists, a combination that exists nowhere else in the sport's history. Opposing counsel will speak of a perfect June record. I will speak of two decades of sustained, undeniable dominance. Perfection over six Finals is impressive; excellence over twenty-one seasons is unprecedented.`,
-  rebuttal: `Your Honor, counsel calls it a savings account — I call it the largest body of evidence in basketball history. Ten Finals appearances, including eight consecutive — a feat untouched since the 1960s. The 2016 championship: down three games to one against a 73-win team, the greatest regular season ever assembled, and LeBron James delivered a comeback no Finals had ever seen, leading BOTH teams in points, rebounds, assists, steals, and blocks. That is not accumulation; that is conquest. My opponent's client retired twice while my client simply kept winning. The court should ask why "perfection" required stepping away from the arena while greatness stayed and answered every bell.`,
-  closing: `Your Honor, this court has heard the numbers: 40,000-plus points, the all-time scoring record, four titles with three franchises, four MVPs, twenty All-Star seasons, top five in both points and assists forever. But the decisive evidence is scope. LeBron James beat dynasties in three different decades of basketball. He carried Cleveland to its first championship in 52 years against a 73-win juggernaut. Longevity is not the absence of perfection — it is perfection, renewed every October for twenty-one years. The defense rests, Your Honor, atop the largest mountain of evidence this sport has ever produced.`,
+  opening: `The case for LeBron James is written into the record book itself. All-time leading scorer in NBA history — over 40,000 points, a number nobody had ever touched. Four championships with three different franchises, each one a different mountain. Four MVPs, twenty All-Star selections, twenty straight seasons of excellence, and in year twenty-one, still playing All-NBA level ball. Top five all-time in scoring AND assists — a combo that exists nowhere else in this sport's history. Six perfect Junes is a nice story. Twenty-one years of sustained, undeniable dominance is unprecedented.`,
+  rebuttal: `Calling it "accumulation" — I'd call it the biggest body of evidence basketball has ever produced. Ten Finals trips, eight of them back to back, a feat nobody's touched since the 1960s. 2016: down three games to one against a 73-win team, the greatest regular season ever played, and LeBron delivers a comeback no Finals had ever seen — leading BOTH teams in points, rebounds, assists, steals, and blocks. That's not padding a résumé, that's conquest. My guy never had to step away and come back; he just kept winning, every year, no breaks.`,
+  closing: `Run the numbers one more time: 40,000-plus points, the all-time scoring record, four titles with three franchises, four MVPs, twenty All-Star seasons, top five ever in both points and assists. But the real story is scope — LeBron beat different dynasties across three different decades of basketball. He brought Cleveland its first title in 52 years against a 73-win juggernaut. Longevity isn't the opposite of greatness — it's greatness, renewed every single October for twenty-one years straight.`,
 };
 
 const GENERIC: Record<Phase, (athlete: string, rival: string, sport: string) => string> = {
   opening: (athlete, rival, sport) =>
-    `Your Honor, the court will hear many words today, but the trophy cabinet speaks first, and it speaks for ${athlete}. The titles, the records, the seasons of sustained dominance — these are not opinions, they are entries in the official register of ${sport}. Opposing counsel will ask this court to be dazzled by ${rival}'s highlights. I ask the court to be persuaded by the ledger. When the noise of fandom fades, what remains is what was won, and no one in ${sport} has bent the record book to their will like my client. The prosecution's case is simple: the results are already in evidence.`,
+    `Look, we can talk highlights all day, but the trophy case speaks first, and it speaks for ${athlete}. The titles, the records, the years of sustained dominance — those aren't opinions, they're entries in the official history of ${sport}. The other side is going to try to dazzle you with ${rival}'s highlight reel. I'm just going to point at the ledger. When the noise fades, what's left is what was actually won, and nobody in ${sport} has rewritten the record book like my pick has.`,
   rebuttal: (athlete, rival) =>
-    `Counsel's argument, Your Honor, mistakes affection for evidence. Every point just made about ${rival} collapses under one question: against whom, and when it mattered most? ${athlete}'s résumé was built in the crucible — against the strongest rivals, on the biggest stages, with the outcome in doubt. The court should note what opposing counsel did not say: they did not say their client won more. They cannot. So they ask the court to weigh style over silverware and memory over the record. This bench deals in evidence, and the evidence wears my client's name.`,
+    `That whole argument for ${rival} is nostalgia dressed up as evidence. Ask one question: against who, and when it actually mattered? ${athlete}'s résumé was built against the toughest competition, on the biggest stages, with everything on the line. Notice what the other side didn't say — they didn't say their pick won more. Because they can't. So now it's "vibes over trophies." I'll take the trophies every time.`,
   closing: (athlete, rival, sport) =>
-    `Your Honor, strip away the nostalgia and the narrative, and this case decides itself. The standard for greatness in ${sport} is not who was most beloved — it is who achieved the most, against the best, for the longest. On every one of those measures, ${athlete} stands above ${rival}. The defense has offered passion; the prosecution has offered proof. History does not remember the arguments, Your Honor. It remembers the results — and the results rest with my client.`,
+    `Strip away the nostalgia and this one settles itself. Greatness in ${sport} isn't about who was more fun to watch — it's who achieved the most, against the best, for the longest. On every one of those, ${athlete} is ahead of ${rival}. The other side brought passion. I brought proof. History doesn't remember the arguments — it remembers the results, and the results are on my side.`,
 };
 
 function cannedFor(athlete: string, rival: string, sport: string, phase: Phase): string {
@@ -39,11 +39,11 @@ export function demoCounselArgument(c: CaseConfig, phase: Phase): string {
 }
 
 /**
- * Demo verdict: scores the AI counsel a consistent 8 per round and the human
- * counsel by effort (word count), so an engaged demo user can genuinely win.
+ * Demo verdict: scores the AI a consistent 8 per round and the human
+ * by effort (word count), so an engaged demo user can genuinely win.
  */
 export function demoVerdict(c: CaseConfig, transcript: TranscriptEntry[]): Verdict {
-  const phases = ["Opening Statements", "Rebuttal", "Closing Arguments"];
+  const phases = ["Make Your Case", "Clap Back", "Bring It Home"];
   const userEntries = transcript.filter((t) => t.speaker === "user");
   const scores = phases.map((phase, i) => {
     const words = (userEntries[i]?.text ?? "").trim().split(/\s+/).length;
@@ -60,21 +60,21 @@ export function demoVerdict(c: CaseConfig, transcript: TranscriptEntry[]): Verdi
   for (const s of scores) {
     s.note =
       s.user > s.ai
-        ? `Human counsel out-argued the machine in the ${s.phase.toLowerCase()} — thorough, specific, and relentless.`
+        ? `The human out-argued the AI in "${s.phase}" — sharp, specific, and relentless.`
         : s.user === s.ai
-          ? `An even exchange of fire in the ${s.phase.toLowerCase()}; neither counsel yielded ground.`
-          : `AI counsel's evidence carried the ${s.phase.toLowerCase()}; human counsel argued with heart but light artillery.`;
+          ? `Dead even in "${s.phase}" — neither side gave any ground.`
+          : `The AI's stats carried "${s.phase}"; the human brought heart but light ammo.`;
   }
   const winner = userTotal > aiTotal ? "user" : "ai";
   const winnerAthlete = winner === "user" ? c.userAthlete : c.aiAthlete;
-  const winnerCounsel = winner === "user" ? "human counsel" : "AI counsel";
+  const winnerSide = winner === "user" ? "the human" : "the AI";
 
   return {
     winner,
     scores,
-    opinion: `This court has endured lengthier trials, but few louder. Both counsels argued as though ${c.sport} itself hung in the balance — and perhaps it did. Having weighed the evidence, the rebuttals, and no small amount of theatrics, the bench finds that ${winnerCounsel} carried the day, and judgment is entered for ${winnerAthlete}. Let the record show the losing side argued honorably and is welcome to appeal — the docket of GOAT Court is never closed, and greatness is always subject to retrial. (Rendered in demo mode: add an ANTHROPIC_API_KEY for a live AI judge.)`,
+    opinion: `That was a lot of noise for one debate, but ${c.sport} tends to do that to people. Both sides argued like the fate of the sport hung on it — and maybe it did. Weighing the stats, the comebacks, and no small amount of trash talk, ${winnerSide} takes it, and the verdict goes to ${winnerAthlete}. The losing side argued well and is welcome to run it back — the docket's never closed, and greatness is always up for debate. (This is demo mode: add a GROQ_API_KEY for a live AI judge.)`,
     bestLine:
       transcript.find((t) => t.speaker === "ai")?.text.split(". ").at(-1) ??
-      "The results are already in evidence.",
+      "The results speak for themselves.",
   };
 }

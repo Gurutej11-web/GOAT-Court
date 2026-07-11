@@ -1,5 +1,5 @@
-import Anthropic from "@anthropic-ai/sdk";
-import { judgeSystem, judgeUserMessage, MODEL, VERDICT_SCHEMA } from "@/lib/prompts";
+import Groq from "groq-sdk";
+import { judgeSystem, judgeUserMessage, MODEL } from "@/lib/prompts";
 import { demoVerdict } from "@/lib/demo";
 import type { CaseConfig, TranscriptEntry, Verdict } from "@/lib/types";
 
@@ -41,19 +41,20 @@ function parseVerdict(text: string): Verdict | null {
 }
 
 async function requestVerdict(
-  client: Anthropic,
+  client: Groq,
   caseConfig: CaseConfig,
   transcript: TranscriptEntry[],
 ): Promise<Verdict | null> {
-  const response = await client.messages.create({
+  const response = await client.chat.completions.create({
     model: MODEL,
     max_tokens: 2048,
-    system: judgeSystem(caseConfig),
-    output_config: { format: { type: "json_schema", schema: VERDICT_SCHEMA } },
-    messages: [{ role: "user", content: judgeUserMessage(caseConfig, transcript) }],
+    response_format: { type: "json_object" },
+    messages: [
+      { role: "system", content: judgeSystem(caseConfig) },
+      { role: "user", content: judgeUserMessage(caseConfig, transcript) },
+    ],
   });
-  if (response.stop_reason === "refusal") return null;
-  const text = response.content.find((b) => b.type === "text")?.text;
+  const text = response.choices[0]?.message?.content;
   return text ? parseVerdict(text) : null;
 }
 
@@ -69,11 +70,11 @@ export async function POST(req: Request) {
   }
   const { caseConfig, transcript } = body;
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.GROQ_API_KEY) {
     return Response.json({ verdict: demoVerdict(caseConfig, transcript), mode: "demo" });
   }
 
-  const client = new Anthropic();
+  const client = new Groq();
   try {
     // One retry on a malformed verdict before falling back to the demo judge.
     const verdict =
@@ -83,20 +84,21 @@ export async function POST(req: Request) {
     return Response.json({ verdict: demoVerdict(caseConfig, transcript), mode: "demo" });
   } catch (err) {
     console.error("judge error:", err);
-    if (err instanceof Anthropic.AuthenticationError) {
+    const status = err instanceof Groq.APIError ? err.status : undefined;
+    if (status === 401) {
       return Response.json(
-        { error: "The judge rejected the court's credentials — check ANTHROPIC_API_KEY in .env.local." },
+        { error: "The judge rejected the credentials — check GROQ_API_KEY in .env.local." },
         { status: 500 },
       );
     }
-    if (err instanceof Anthropic.RateLimitError) {
+    if (status === 429) {
       return Response.json(
-        { error: "The judge is hearing too many cases at once — wait a moment and retry." },
+        { error: "Too many requests right now — wait a moment and retry." },
         { status: 429 },
       );
     }
     return Response.json(
-      { error: "The judge failed to reach a verdict. Retry the deliberation." },
+      { error: "The judge couldn't lock in a verdict. Retry the deliberation." },
       { status: 500 },
     );
   }

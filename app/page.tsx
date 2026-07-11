@@ -5,6 +5,6 @@ import GoatCourt from "./GoatCourt";
 export const dynamic = "force-dynamic";
 
 export default function Home() {
-  const live = Boolean(process.env.ANTHROPIC_API_KEY);
+  const live = Boolean(process.env.GROQ_API_KEY);
   return <GoatCourt live={live} />;
 }
