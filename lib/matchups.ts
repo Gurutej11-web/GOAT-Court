@@ -10,55 +10,59 @@ export interface SportEntry {
   athletes: Athlete[];
 }
 
-/** The curated database: each player here has a real photo and real stats. */
+/**
+ * The curated database: each player here has a real photo and real stats.
+ * Photos are Wikipedia's own thumbnail URLs (not full-resolution originals);
+ * hotlinking originals directly gets rate-limited by Wikimedia at scale.
+ */
 export const SPORTS: SportEntry[] = [
   {
     sport: "Basketball",
     athletes: [
-      { name: "Michael Jordan", image: "https://upload.wikimedia.org/wikipedia/commons/a/ae/Michael_Jordan_in_2014.jpg" },
-      { name: "LeBron James", image: "https://upload.wikimedia.org/wikipedia/commons/7/7a/LeBron_James_%2851959977144%29_%28cropped2%29.jpg" },
-      { name: "Kobe Bryant", image: "https://upload.wikimedia.org/wikipedia/commons/3/36/Kobe_Bryant_Dec_2014.jpg" },
-      { name: "Magic Johnson", image: "https://upload.wikimedia.org/wikipedia/commons/2/29/Magic_Johnson_at_SXSW_2022_%2851958828669%29_%28cropped%29.jpg" },
-      { name: "Larry Bird", image: "https://upload.wikimedia.org/wikipedia/commons/b/bb/Larrybird.jpg" },
-      { name: "Kareem Abdul-Jabbar", image: "https://upload.wikimedia.org/wikipedia/commons/a/a0/Kareem_Abdul-Jabbar_May_2014.jpg" },
+      { name: "Michael Jordan", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Michael_Jordan_in_2014.jpg/330px-Michael_Jordan_in_2014.jpg" },
+      { name: "LeBron James", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/LeBron_James_%2851959977144%29_%28cropped2%29.jpg/330px-LeBron_James_%2851959977144%29_%28cropped2%29.jpg" },
+      { name: "Kobe Bryant", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Kobe_Bryant_Dec_2014.jpg/330px-Kobe_Bryant_Dec_2014.jpg" },
+      { name: "Magic Johnson", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Magic_Johnson_at_SXSW_2022_%2851958828669%29_%28cropped%29.jpg/330px-Magic_Johnson_at_SXSW_2022_%2851958828669%29_%28cropped%29.jpg" },
+      { name: "Larry Bird", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Larrybird.jpg/330px-Larrybird.jpg" },
+      { name: "Kareem Abdul-Jabbar", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Kareem_Abdul-Jabbar_May_2014.jpg/330px-Kareem_Abdul-Jabbar_May_2014.jpg" },
     ],
   },
   {
     sport: "Soccer",
     athletes: [
-      { name: "Lionel Messi", image: "https://upload.wikimedia.org/wikipedia/commons/2/27/Lionel_Messi_NE_Revolution_Inter_Miami_7.9.25-178.jpg" },
-      { name: "Cristiano Ronaldo", image: "https://upload.wikimedia.org/wikipedia/commons/6/67/Cristiano_Ronaldo_2275_%28cropped%29.jpg" },
-      { name: "Pelé", image: "https://upload.wikimedia.org/wikipedia/commons/5/5e/Pele_con_brasil_%28cropped%29.jpg" },
-      { name: "Diego Maradona", image: "https://upload.wikimedia.org/wikipedia/commons/4/48/Argentina_celebrando_copa_%28cropped%29.jpg" },
-      { name: "Zinedine Zidane", image: "https://upload.wikimedia.org/wikipedia/commons/f/f3/Zinedine_Zidane_by_Tasnim_03.jpg" },
+      { name: "Lionel Messi", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Lionel_Messi_NE_Revolution_Inter_Miami_7.9.25-178.jpg/330px-Lionel_Messi_NE_Revolution_Inter_Miami_7.9.25-178.jpg" },
+      { name: "Cristiano Ronaldo", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Cristiano_Ronaldo_2275_%28cropped%29.jpg/330px-Cristiano_Ronaldo_2275_%28cropped%29.jpg" },
+      { name: "Pelé", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Pele_con_brasil_%28cropped%29.jpg/330px-Pele_con_brasil_%28cropped%29.jpg" },
+      { name: "Diego Maradona", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Argentina_celebrando_copa_%28cropped%29.jpg/330px-Argentina_celebrando_copa_%28cropped%29.jpg" },
+      { name: "Zinedine Zidane", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Zinedine_Zidane_by_Tasnim_03.jpg/330px-Zinedine_Zidane_by_Tasnim_03.jpg" },
     ],
   },
   {
     sport: "Tennis",
     athletes: [
-      { name: "Roger Federer", image: "https://upload.wikimedia.org/wikipedia/commons/1/11/Roger_Federer_2015_%28cropped%29.jpg" },
-      { name: "Rafael Nadal", image: "https://upload.wikimedia.org/wikipedia/commons/7/71/Rafael_Nadal_en_2024_%28cropped%29.jpg" },
-      { name: "Novak Djokovic", image: "https://upload.wikimedia.org/wikipedia/commons/d/d1/Novak_Djokovic_Paris_2024_Olympic_Games_%28cropped%29.jpg" },
-      { name: "Serena Williams", image: "https://upload.wikimedia.org/wikipedia/commons/2/2f/Guests_at_the_2026_Met_Gala_209_%28cropped%29.jpg" },
-      { name: "Steffi Graf", image: "https://upload.wikimedia.org/wikipedia/commons/f/f0/Steffi_Graf_in_Hamburg_2010_%28cropped%29.jpg" },
+      { name: "Roger Federer", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Roger_Federer_2015_%28cropped%29.jpg/330px-Roger_Federer_2015_%28cropped%29.jpg" },
+      { name: "Rafael Nadal", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Rafael_Nadal_en_2024_%28cropped%29.jpg/330px-Rafael_Nadal_en_2024_%28cropped%29.jpg" },
+      { name: "Novak Djokovic", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Novak_Djokovic_Paris_2024_Olympic_Games_%28cropped%29.jpg/330px-Novak_Djokovic_Paris_2024_Olympic_Games_%28cropped%29.jpg" },
+      { name: "Serena Williams", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Guests_at_the_2026_Met_Gala_209_%28cropped%29.jpg/330px-Guests_at_the_2026_Met_Gala_209_%28cropped%29.jpg" },
+      { name: "Steffi Graf", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Steffi_Graf_in_Hamburg_2010_%28cropped%29.jpg/330px-Steffi_Graf_in_Hamburg_2010_%28cropped%29.jpg" },
     ],
   },
   {
     sport: "American Football",
     athletes: [
-      { name: "Tom Brady", image: "https://upload.wikimedia.org/wikipedia/commons/7/73/25th_Laureus_World_Sports_Awards_-_Red_Carpet_-_Tom_Brady_-_240422_191334_%28cropped%29_%28cropped%29.jpg" },
-      { name: "Peyton Manning", image: "https://upload.wikimedia.org/wikipedia/commons/2/2e/Peyton_Manning_%2851665689271%29.jpg" },
-      { name: "Patrick Mahomes", image: "https://upload.wikimedia.org/wikipedia/commons/9/92/Patrick_Mahomes_%2851615475056%29.jpg" },
-      { name: "Jerry Rice", image: "https://upload.wikimedia.org/wikipedia/commons/0/01/Super_Bowl_44_Miami_Florida_NFL_Network_South_Beach_Set_Deon_Sanders_interviews_Jerry_Rice_%284331549867%29_%28cropped%29_-_Jerry_Rice.jpg" },
+      { name: "Tom Brady", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/25th_Laureus_World_Sports_Awards_-_Red_Carpet_-_Tom_Brady_-_240422_191334_%28cropped%29_%28cropped%29.jpg/330px-25th_Laureus_World_Sports_Awards_-_Red_Carpet_-_Tom_Brady_-_240422_191334_%28cropped%29_%28cropped%29.jpg" },
+      { name: "Peyton Manning", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Peyton_Manning_%2851665689271%29.jpg/330px-Peyton_Manning_%2851665689271%29.jpg" },
+      { name: "Patrick Mahomes", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Patrick_Mahomes_%2851615475056%29.jpg/330px-Patrick_Mahomes_%2851615475056%29.jpg" },
+      { name: "Jerry Rice", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Super_Bowl_44_Miami_Florida_NFL_Network_South_Beach_Set_Deon_Sanders_interviews_Jerry_Rice_%284331549867%29_%28cropped%29_-_Jerry_Rice.jpg/330px-Super_Bowl_44_Miami_Florida_NFL_Network_South_Beach_Set_Deon_Sanders_interviews_Jerry_Rice_%284331549867%29_%28cropped%29_-_Jerry_Rice.jpg" },
     ],
   },
   {
     sport: "Boxing",
     athletes: [
-      { name: "Muhammad Ali", image: "https://upload.wikimedia.org/wikipedia/commons/8/89/Muhammad_Ali_NYWTS.jpg" },
-      { name: "Mike Tyson", image: "https://upload.wikimedia.org/wikipedia/commons/e/ee/Mike_Tyson_Photo_Op_GalaxyCon_Austin_2023.jpg" },
-      { name: "Floyd Mayweather", image: "https://upload.wikimedia.org/wikipedia/commons/d/d9/Floyd_Mayweather_Jr_2011.jpg" },
-      { name: "Manny Pacquiao", image: "https://upload.wikimedia.org/wikipedia/commons/6/69/Former_senator_Manny_Pacquiao_speaks_in_event_%2810-01-2025%29_%28cropped%29.jpg" },
+      { name: "Muhammad Ali", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Muhammad_Ali_NYWTS.jpg/330px-Muhammad_Ali_NYWTS.jpg" },
+      { name: "Mike Tyson", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Mike_Tyson_Photo_Op_GalaxyCon_Austin_2023.jpg/330px-Mike_Tyson_Photo_Op_GalaxyCon_Austin_2023.jpg" },
+      { name: "Floyd Mayweather", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Floyd_Mayweather_Jr_2011.jpg/330px-Floyd_Mayweather_Jr_2011.jpg" },
+      { name: "Manny Pacquiao", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Former_senator_Manny_Pacquiao_speaks_in_event_%2810-01-2025%29_%28cropped%29.jpg/330px-Former_senator_Manny_Pacquiao_speaks_in_event_%2810-01-2025%29_%28cropped%29.jpg" },
     ],
   },
 ];

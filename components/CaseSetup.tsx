@@ -92,7 +92,7 @@ export default function CaseSetup({ live, savedAvailable, onStart, onResume }: P
       {savedAvailable && (
         <button
           onClick={onResume}
-          className="mt-6 flex w-full items-center justify-between rounded-lg border border-violet/50 bg-violet/10 px-4 py-3 text-left transition-colors hover:bg-violet/15 cursor-pointer"
+          className="card-shadow mt-6 flex w-full items-center justify-between rounded-lg border border-violet/50 bg-violet/10 px-4 py-3 text-left transition-colors hover:bg-violet/15 cursor-pointer"
         >
           <span className="text-sm text-text">You've got a debate in progress.</span>
           <span className="text-sm font-semibold text-violet-bright">Continue →</span>
@@ -107,23 +107,26 @@ export default function CaseSetup({ live, savedAvailable, onStart, onResume }: P
               <button
                 key={`${r.a}-${r.b}`}
                 onClick={() => pickMatchup(r.sport, r.a, r.b)}
-                className={`flex items-center gap-2 rounded-full border py-1 pl-1 pr-3.5 text-sm transition-colors cursor-pointer ${
+                className={`card-shadow flex items-center gap-2 rounded-full border py-1 pl-1 pr-3.5 text-sm transition-all hover:-translate-y-0.5 cursor-pointer ${
                   isSelected
                     ? "border-violet bg-violet/15 text-violet-bright"
                     : "border-edge bg-surface text-text-dim hover:border-violet/60 hover:text-text"
                 }`}
               >
                 <span className="flex -space-x-2">
-                  <PlayerAvatar name={r.a} image={imageFor(r.sport, r.a)} size={22} className="ring-2 ring-ink" />
-                  <PlayerAvatar name={r.b} image={imageFor(r.sport, r.b)} size={22} className="ring-2 ring-ink" />
+                  <PlayerAvatar name={r.a} image={imageFor(r.sport, r.a)} size={24} className="ring-2 ring-ink" />
+                  <PlayerAvatar name={r.b} image={imageFor(r.sport, r.b)} size={24} className="ring-2 ring-ink" />
                 </span>
-                {r.a} <span className="opacity-50">vs</span> {r.b}
+                <span>
+                  {r.a} <span className="opacity-50">vs</span> {r.b}
+                </span>
+                <span className="text-[10px] uppercase tracking-wide text-text-dim/60">{r.sport}</span>
               </button>
             );
           })}
           <button
             onClick={surpriseMe}
-            className="rounded-full border border-dashed border-cyan/60 px-3.5 py-1.5 text-sm text-cyan hover:bg-cyan/10 transition-colors cursor-pointer"
+            className="card-shadow rounded-full border border-dashed border-cyan/60 px-3.5 py-1.5 text-sm text-cyan transition-all hover:-translate-y-0.5 hover:bg-cyan/10 cursor-pointer"
           >
             🎲 Surprise me
           </button>
@@ -131,7 +134,7 @@ export default function CaseSetup({ live, savedAvailable, onStart, onResume }: P
       </section>
 
       <section className="mt-8">
-        <div className="flex gap-1 rounded-lg border border-edge bg-surface p-1 text-sm">
+        <div className="card-shadow flex gap-1 rounded-lg border border-edge bg-surface p-1 text-sm">
           <button
             onClick={() => switchMode("database")}
             className={`flex-1 rounded-md py-1.5 transition-colors cursor-pointer ${
@@ -249,7 +252,7 @@ export default function CaseSetup({ live, savedAvailable, onStart, onResume }: P
               <button
                 key={key}
                 onClick={() => setSide(key)}
-                className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-all cursor-pointer ${
+                className={`card-shadow flex items-center gap-3 rounded-xl border p-4 text-left transition-all hover:-translate-y-0.5 cursor-pointer ${
                   side === key
                     ? "border-violet bg-violet/10 shadow-[0_0_24px_rgba(139,92,246,0.25)]"
                     : "border-edge bg-surface hover:border-violet/50"
@@ -272,7 +275,7 @@ export default function CaseSetup({ live, savedAvailable, onStart, onResume }: P
         <button
           onClick={start}
           disabled={!ready || !side}
-          className="rounded-xl bg-gradient-to-r from-violet to-cyan px-8 py-3 font-display text-lg font-bold text-ink transition-all hover:opacity-90 hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:scale-100 cursor-pointer"
+          className="rounded-xl bg-gradient-to-r from-violet to-cyan px-8 py-3 font-display text-lg font-bold text-ink shadow-lg shadow-violet/20 transition-all hover:opacity-90 hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-30 disabled:shadow-none disabled:hover:scale-100 cursor-pointer"
         >
           Start the debate
         </button>

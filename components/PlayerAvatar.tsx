@@ -10,6 +10,8 @@ interface Props {
   className?: string;
 }
 
+const MAX_RETRIES = 2;
+
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "?";
@@ -17,8 +19,19 @@ function initials(name: string): string {
 }
 
 export default function PlayerAvatar({ name, image, size = 64, className = "" }: Props) {
-  const [errored, setErrored] = useState(false);
-  const showImage = Boolean(image) && !errored;
+  const [attempt, setAttempt] = useState(0);
+  const [gaveUp, setGaveUp] = useState(false);
+  const showImage = Boolean(image) && !gaveUp;
+
+  function handleError() {
+    // Wikimedia occasionally 429s a burst of simultaneous requests; a short
+    // retry clears it up almost every time before we fall back to initials.
+    if (attempt < MAX_RETRIES) {
+      setTimeout(() => setAttempt((a) => a + 1), 500 * (attempt + 1));
+    } else {
+      setGaveUp(true);
+    }
+  }
 
   return (
     <div
@@ -27,13 +40,14 @@ export default function PlayerAvatar({ name, image, size = 64, className = "" }:
     >
       {showImage ? (
         <Image
+          key={attempt}
           src={image as string}
           alt={name}
           fill
           sizes={`${size}px`}
           loading="eager"
           className="object-cover"
-          onError={() => setErrored(true)}
+          onError={handleError}
         />
       ) : (
         <span className="font-display font-bold text-ink" style={{ fontSize: size * 0.34 }}>
