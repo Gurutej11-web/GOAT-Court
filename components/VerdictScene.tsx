@@ -250,19 +250,19 @@ export default function VerdictScene({
           >
             New matchup
           </button>
-        </div>
-
-        <div
-          className="mt-4 text-center animate-rise"
-          style={{ animationDelay: "0.6s" }}
-        >
           <button
             onClick={copyReplayLink}
-            className="text-xs text-text-dim hover:text-accent transition-colors cursor-pointer"
+            className="rounded-xl border-2 border-accent bg-accent/10 px-6 py-2.5 font-display font-bold text-accent shadow-lg shadow-accent/10 transition-all hover:bg-accent/20 hover:scale-[1.02] cursor-pointer"
           >
-            {linkCopied ? "Link copied!" : "Copy a link so a friend can debate this matchup"}
+            {linkCopied ? "Link copied!" : "Challenge a friend"}
           </button>
         </div>
+        <p
+          className="mt-3 text-center text-xs text-text-dim animate-rise"
+          style={{ animationDelay: "0.6s" }}
+        >
+          Sends them this exact matchup so they can argue it out too.
+        </p>
       </main>
     </>
   );

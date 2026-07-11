@@ -459,6 +459,11 @@ export function suggestSports(query: string): string[] {
   return names.filter((s) => s.toLowerCase().includes(q));
 }
 
+/** Shown when browsing with an empty field - a scrollable starting list, not the whole roster. */
+const BROWSE_SUGGESTION_LIMIT = 25;
+/** Shown once the user is actively typing - a wider net across the full roster. */
+const SEARCH_SUGGESTION_LIMIT = 50;
+
 /** Player suggestions, preferring the current sport's roster, matched by substring. */
 export function suggestAthletes(query: string, sport: string, exclude: string): string[] {
   const q = query.trim().toLowerCase();
@@ -466,8 +471,8 @@ export function suggestAthletes(query: string, sport: string, exclude: string): 
   const inSport = athleteNamesFor(sport);
   const pool = inSport.length > 0 ? inSport : ALL_ATHLETES.map((e) => e.athlete.name);
   const unique = Array.from(new Set(pool)).filter((n) => n.toLowerCase() !== excludeLower);
-  if (!q) return unique.slice(0, 8);
-  return unique.filter((n) => n.toLowerCase().includes(q)).slice(0, 8);
+  if (!q) return unique.slice(0, BROWSE_SUGGESTION_LIMIT);
+  return unique.filter((n) => n.toLowerCase().includes(q)).slice(0, SEARCH_SUGGESTION_LIMIT);
 }
 
 export function randomMatchup(): Matchup {

@@ -4,24 +4,21 @@ import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "goat-court-theme";
 
-type Theme = "light" | "dark" | "contrast";
+type Theme = "light" | "dark";
 
 const NEXT: Record<Theme, Theme> = {
   light: "dark",
-  dark: "contrast",
-  contrast: "light",
+  dark: "light",
 };
 
 const SHORT_LABEL: Record<Theme, string> = {
   light: "Light",
   dark: "Dark",
-  contrast: "Contrast",
 };
 
 const LABEL: Record<Theme, string> = {
   light: "Light mode active, switch to dark",
-  dark: "Dark mode active, switch to high contrast",
-  contrast: "High contrast active, switch to light",
+  dark: "Dark mode active, switch to light",
 };
 
 export default function ThemeToggle({ className = "" }: { className?: string }) {
@@ -30,7 +27,7 @@ export default function ThemeToggle({ className = "" }: { className?: string }) 
   useEffect(() => {
     const current = document.documentElement.dataset.theme;
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setTheme(current === "dark" || current === "contrast" ? current : "light");
+    setTheme(current === "dark" ? "dark" : "light");
   }, []);
 
   function toggle() {

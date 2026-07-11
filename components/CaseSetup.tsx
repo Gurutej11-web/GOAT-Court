@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ALL_ATHLETES, FEATURED, SPORTS, imageFor, randomMatchup, suggestAthletes, suggestSports } from "@/lib/matchups";
+import { ALL_ATHLETES, FEATURED, imageFor, randomMatchup, suggestAthletes, suggestSports } from "@/lib/matchups";
 import PlayerAvatar from "@/components/PlayerAvatar";
 import AutocompleteInput from "@/components/AutocompleteInput";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -322,7 +322,8 @@ export default function CaseSetup({
           />
         </div>
         <p className="mt-2 text-xs text-text-dim/70">
-          {`Start typing for suggestions from our growing roster (${ALL_ATHLETES.length} players across ${SPORTS.length} sports), or enter anyone. The AI won't invent stats for players it doesn't know well.`}
+          Start typing for suggestions from our growing roster, or enter anyone. The AI won&apos;t
+          invent stats for players it doesn&apos;t know well.
         </p>
       </section>
 
