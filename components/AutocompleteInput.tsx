@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 
 interface Props {
   value: string;
@@ -21,6 +21,7 @@ export default function AutocompleteInput({
 }: Props) {
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(-1);
+  const listboxId = useId();
 
   function selectSuggestion(s: string) {
     onChange(s);
@@ -60,11 +61,16 @@ export default function AutocompleteInput({
         aria-label={ariaLabel}
         role="combobox"
         aria-expanded={open}
+        aria-controls={listboxId}
         autoComplete="off"
         className={className}
       />
       {open && suggestions.length > 0 && (
-        <ul className="card-shadow absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-edge bg-surface py-1 text-sm">
+        <ul
+          id={listboxId}
+          role="listbox"
+          className="card-shadow absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-edge bg-surface py-1 text-sm"
+        >
           {suggestions.map((s, i) => (
             <li key={s}>
               <button

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { imageFor } from "@/lib/matchups";
 import PlayerAvatar from "@/components/PlayerAvatar";
 import TopBar from "@/components/TopBar";
+import { shareOrDownloadVerdictCard } from "@/lib/shareImage";
 import type { CaseConfig, Verdict } from "@/lib/types";
 import { totalScore } from "@/lib/types";
 
@@ -23,6 +24,7 @@ export default function VerdictScene({
   onNewCase,
 }: Props) {
   const [copied, setCopied] = useState(false);
+  const [imageState, setImageState] = useState<"idle" | "working" | "done">("idle");
   const userTotal = totalScore(verdict, "user");
   const aiTotal = totalScore(verdict, "ai");
   const userWon = verdict.winner === "user";
@@ -38,6 +40,22 @@ export default function VerdictScene({
     } catch {
       // clipboard unavailable, nothing to do
     }
+  }
+
+  async function shareImage() {
+    setImageState("working");
+    await shareOrDownloadVerdictCard({
+      winnerName: winnerAthlete,
+      winnerImage: winnerImg,
+      userAthlete: caseConfig.userAthlete,
+      aiAthlete: caseConfig.aiAthlete,
+      sport: caseConfig.sport,
+      userTotal,
+      aiTotal,
+      bestLine: verdict.bestLine,
+    });
+    setImageState("done");
+    setTimeout(() => setImageState("idle"), 2000);
   }
 
   return (
@@ -141,12 +159,21 @@ export default function VerdictScene({
             <h2 className="text-xs font-semibold uppercase tracking-wide text-accent">
               Why {winnerAthlete} won
             </h2>
-            <button
-              onClick={copyResult}
-              className="shrink-0 rounded-lg border border-edge px-2.5 py-1 text-xs text-text-dim hover:border-accent/50 hover:text-text transition-colors cursor-pointer"
-            >
-              {copied ? "Copied!" : "Copy result"}
-            </button>
+            <div className="flex shrink-0 gap-2">
+              <button
+                onClick={copyResult}
+                className="rounded-lg border border-edge px-2.5 py-1 text-xs text-text-dim hover:border-accent/50 hover:text-text transition-colors cursor-pointer"
+              >
+                {copied ? "Copied!" : "Copy result"}
+              </button>
+              <button
+                onClick={shareImage}
+                disabled={imageState === "working"}
+                className="rounded-lg border border-edge px-2.5 py-1 text-xs text-text-dim hover:border-accent/50 hover:text-text transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {imageState === "working" ? "Making…" : imageState === "done" ? "Done!" : "📷 Share image"}
+              </button>
+            </div>
           </div>
           <p className="mt-3 whitespace-pre-wrap leading-relaxed text-text">{verdict.opinion}</p>
           <blockquote className="mt-4 border-l-2 border-neutral pl-4">

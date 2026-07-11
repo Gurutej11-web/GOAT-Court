@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import CaseSetup from "@/components/CaseSetup";
 import Courtroom from "@/components/Courtroom";
 import VerdictScene from "@/components/VerdictScene";
-import type { CaseConfig, Phase, TranscriptEntry, Verdict } from "@/lib/types";
-import { PHASES } from "@/lib/types";
+import TournamentMode from "@/components/TournamentMode";
+import type { CaseConfig, Matchup, Phase, TranscriptEntry, Verdict } from "@/lib/types";
+import { PHASES, totalScore } from "@/lib/types";
+import { addHistoryEntry, recordResult } from "@/lib/stats";
 
 type FailedStage = "counsel" | "judge" | null;
 
@@ -38,6 +40,27 @@ function persist(state: SavedState | null) {
   }
 }
 
+function readChallengeFromUrl(): (Matchup & { defaultSide?: "a" | "b" }) | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const encoded = params.get("challenge");
+    if (!encoded) return null;
+    const decoded = JSON.parse(decodeURIComponent(atob(encoded))) as {
+      sport: string;
+      a: string;
+      b: string;
+      side?: "a" | "b";
+    };
+    if (!decoded.sport || !decoded.a || !decoded.b) return null;
+    // The friend gets the opposite side by default, so it's you-vs-them on the same matchup.
+    const defaultSide = decoded.side === "a" ? "b" : decoded.side === "b" ? "a" : undefined;
+    return { sport: decoded.sport, a: decoded.a, b: decoded.b, defaultSide };
+  } catch {
+    return null;
+  }
+}
+
 export default function GoatCourt({ live }: { live: boolean }) {
   const [caseConfig, setCaseConfig] = useState<CaseConfig | null>(null);
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
@@ -49,12 +72,17 @@ export default function GoatCourt({ live }: { live: boolean }) {
   const [error, setError] = useState<string | null>(null);
   const [failedStage, setFailedStage] = useState<FailedStage>(null);
   const [savedAvailable, setSavedAvailable] = useState(false);
+  const [initialMatchup, setInitialMatchup] = useState<(Matchup & { defaultSide?: "a" | "b" }) | null>(null);
+  const [tournamentOpen, setTournamentOpen] = useState(false);
 
   const phase: Phase = PHASES[Math.min(phaseIndex, PHASES.length - 1)];
 
-  // A debate from a previous visit is resumable if it was saved.
+  // A debate from a previous visit is resumable if it was saved. This reads
+  // localStorage/the URL, which must happen after mount to stay SSR-safe.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSavedAvailable(Boolean(loadSaved()));
+    setInitialMatchup(readChallengeFromUrl());
   }, []);
 
   // Keep the active debate saved as it progresses.
@@ -62,6 +90,19 @@ export default function GoatCourt({ live }: { live: boolean }) {
     if (!caseConfig) return;
     persist({ caseConfig, transcript, phaseIndex, verdict });
   }, [caseConfig, transcript, phaseIndex, verdict]);
+
+  function recordFinishedDebate(c: CaseConfig, v: Verdict) {
+    recordResult(v.winner === "user");
+    addHistoryEntry({
+      sport: c.sport,
+      userAthlete: c.userAthlete,
+      aiAthlete: c.aiAthlete,
+      winner: v.winner,
+      userTotal: totalScore(v, "user"),
+      aiTotal: totalScore(v, "ai"),
+      mode: c.mode,
+    });
+  }
 
   function resumeSaved() {
     const saved = loadSaved();
@@ -140,7 +181,9 @@ export default function GoatCourt({ live }: { live: boolean }) {
       if (!res.ok || !data?.verdict) {
         throw new Error(data?.error ?? "The judge failed to reach a verdict.");
       }
-      setVerdict(data.verdict as Verdict);
+      const v = data.verdict as Verdict;
+      setVerdict(v);
+      recordFinishedDebate(c, v);
     } catch (err) {
       console.error(err);
       setFailedStage("judge");
@@ -156,6 +199,25 @@ export default function GoatCourt({ live }: { live: boolean }) {
 
   function submitArgument(text: string) {
     if (!caseConfig) return;
+
+    if (caseConfig.mode === "friend") {
+      // Both sides are typed by humans passing the same device; no AI call for arguments.
+      const entriesThisPhase = transcript.filter((t) => t.phase === phase).length;
+      const speaker: "user" | "ai" = entriesThisPhase === 0 ? "user" : "ai";
+      const athlete = speaker === "user" ? caseConfig.userAthlete : caseConfig.aiAthlete;
+      const updated: TranscriptEntry[] = [...transcript, { phase, speaker, athlete, text }];
+      setTranscript(updated);
+      if (speaker === "ai") {
+        const pIndex = PHASES.indexOf(phase);
+        if (pIndex === PHASES.length - 1) {
+          void runJudge(caseConfig, updated);
+        } else {
+          setPhaseIndex(pIndex + 1);
+        }
+      }
+      return;
+    }
+
     const withUser: TranscriptEntry[] = [
       ...transcript,
       { phase, speaker: "user", athlete: caseConfig.userAthlete, text },
@@ -197,13 +259,19 @@ export default function GoatCourt({ live }: { live: boolean }) {
     setSavedAvailable(true);
   }
 
+  if (tournamentOpen) {
+    return <TournamentMode live={live} onExit={() => setTournamentOpen(false)} />;
+  }
+
   if (!caseConfig) {
     return (
       <CaseSetup
         live={live}
         savedAvailable={savedAvailable}
+        initialMatchup={initialMatchup}
         onStart={setCaseConfig}
         onResume={resumeSaved}
+        onEnterTournament={() => setTournamentOpen(true)}
       />
     );
   }

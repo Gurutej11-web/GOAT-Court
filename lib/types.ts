@@ -4,10 +4,22 @@ export interface Matchup {
   b: string;
 }
 
+export type DebateStyle = "balanced" | "chill" | "ruthless" | "stats";
+export type DebateMode = "ai" | "friend";
+
+export const STYLES: { value: DebateStyle; label: string; blurb: string }[] = [
+  { value: "balanced", label: "Balanced", blurb: "Confident, fair, hyped" },
+  { value: "chill", label: "Chill", blurb: "Laid-back, friendly" },
+  { value: "ruthless", label: "Ruthless", blurb: "No mercy on the argument" },
+  { value: "stats", label: "Stats Nerd", blurb: "Numbers over everything" },
+];
+
 export interface CaseConfig {
   sport: string;
   userAthlete: string;
   aiAthlete: string;
+  style: DebateStyle;
+  mode: DebateMode;
 }
 
 export type Phase = "opening" | "rebuttal" | "closing";

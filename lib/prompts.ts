@@ -1,17 +1,31 @@
-import type { CaseConfig, Phase, TranscriptEntry } from "./types";
+import type { CaseConfig, DebateStyle, Phase, TranscriptEntry } from "./types";
 import { PHASE_LABELS } from "./types";
 
 export const MODEL = process.env.GOAT_MODEL || "llama-3.3-70b-versatile";
+
+const STYLE_TONE: Record<DebateStyle, string> = {
+  balanced: "Confident and fair, hyped up but not over the top.",
+  chill: "Laid-back and friendly. Still make the case, but keep it light, good-natured, no trash talk.",
+  ruthless:
+    "No mercy. Aggressive and cutting toward the other side's ARGUMENT (never toward the other debater personally). Dismantle weak points hard.",
+  stats:
+    "A stats-obsessed nerd. Lean even harder into numbers than usual, treat this like a spreadsheet argument, cite more specific figures.",
+};
+
+function sideLabels(c: CaseConfig): { user: string; ai: string } {
+  return c.mode === "friend" ? { user: "Player 1", ai: "Player 2" } : { user: "the human", ai: "the AI" };
+}
 
 export function formatTranscript(
   caseConfig: CaseConfig,
   transcript: TranscriptEntry[],
 ): string {
   if (transcript.length === 0) return "(The debate hasn't started yet.)";
+  const labels = sideLabels(caseConfig);
   return transcript
     .map((entry) => {
-      const role = entry.speaker === "user" ? `HUMAN (team ${entry.athlete})` : `AI (team ${entry.athlete})`;
-      return `[${PHASE_LABELS[entry.phase].toUpperCase()}] ${role}:\n${entry.text}`;
+      const who = entry.speaker === "user" ? labels.user : labels.ai;
+      return `[${PHASE_LABELS[entry.phase].toUpperCase()}] ${who.toUpperCase()} (team ${entry.athlete}):\n${entry.text}`;
     })
     .join("\n\n");
 }
@@ -21,12 +35,14 @@ export function counselSystem(c: CaseConfig): string {
 
 You're arguing for ${c.aiAthlete}. The other debater is arguing for ${c.userAthlete}.
 
+Tone for this debate: ${STYLE_TONE[c.style] ?? STYLE_TONE.balanced}
+
 House rules:
-- Talk like a confident, hype sports-debate-show host, think highlight-reel energy, not a courtroom. No "Your Honor," no legal jargon, no stiff formality.
+- Talk like a sports-debate-show host, think highlight-reel energy, not a courtroom. No "Your Honor," no legal jargon, no stiff formality.
 - Back it up with REAL stats, records, and accolades: championships, MVPs, career numbers, head-to-head history. Drop at least three specific real numbers. Never make up a stat, if you're not sure of the exact figure, argue around it instead of inventing one.
 - Directly respond to what the other debater just said. Call out their weakest point and take it apart.
 - Don't concede anything. Spin their strongest stats as era-inflated, a product of teammates, weaker competition, whatever fits.
-- Length: 120-180 words. Confident, quotable, fun to read. End with one sharp mic-drop line.
+- Length: 120-180 words. Quotable, fun to read. End with one sharp mic-drop line.
 - Write like a person talking, not a press release. Use periods and commas; don't use em dashes.
 - Plain paragraphs, no markdown, no lists, no headings.`;
 }
@@ -44,7 +60,8 @@ The human arguing for ${c.userAthlete} just dropped their "${PHASE_LABELS[phase]
 }
 
 export function judgeSystem(c: CaseConfig): string {
-  return `You're the AI judge for GOAT Court. The debate: who's the greatest ${c.sport} player ever, ${c.userAthlete} (argued by the human) or ${c.aiAthlete} (argued by the AI)?
+  const labels = sideLabels(c);
+  return `You're the AI judge for GOAT Court. The debate: who's the greatest ${c.sport} player ever, ${c.userAthlete} (argued by ${labels.user}) or ${c.aiAthlete} (argued by ${labels.ai})?
 
 Read the full debate below and score it. Respond with ONLY a JSON object, no other text, shaped exactly like this:
 {
@@ -60,7 +77,7 @@ Read the full debate below and score it. Respond with ONLY a JSON object, no oth
 
 Rules:
 - Score each round for BOTH sides 1-10, weighing real stats used, logical strength, and how persuasive it was.
-- Judge the arguments as made in this debate, not your personal opinion of the athletes. The human wins rounds by arguing well with real evidence; don't automatically favor the AI, and don't give the human a free pass for weak, evidence-free arguments.
+- Judge the arguments as made in this debate, not your personal opinion of the athletes. ${labels.user} wins rounds by arguing well with real evidence; don't automatically favor ${labels.ai}, and don't give ${labels.user} a free pass for weak, evidence-free arguments.
 - "winner" must be whoever has the higher total across all three rounds. No ties: if the totals are level, adjust one round's score based on evidence quality to break it.
 - Keep the "phase" values exactly as shown above.
 - Write "note", "opinion", and "bestLine" like a person talking. Use periods and commas; don't use em dashes.`;

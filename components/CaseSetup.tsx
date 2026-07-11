@@ -1,32 +1,68 @@
 "use client";
 
-import { useState } from "react";
-import { ALL_ATHLETES, FEATURED, imageFor, randomMatchup, suggestAthletes, suggestSports } from "@/lib/matchups";
+import { useEffect, useState } from "react";
+import { ALL_ATHLETES, FEATURED, SPORTS, imageFor, randomMatchup, suggestAthletes, suggestSports } from "@/lib/matchups";
 import PlayerAvatar from "@/components/PlayerAvatar";
 import AutocompleteInput from "@/components/AutocompleteInput";
 import ThemeToggle from "@/components/ThemeToggle";
-import type { CaseConfig } from "@/lib/types";
+import HistoryPanel from "@/components/HistoryPanel";
+import type { CaseConfig, DebateMode, DebateStyle, Matchup } from "@/lib/types";
+import { STYLES } from "@/lib/types";
+import { hasOnboarded, loadStats, markOnboarded, type StatsRecord } from "@/lib/stats";
+
+const EMPTY_STATS: StatsRecord = { wins: 0, losses: 0, streak: 0 };
 
 interface Props {
   live: boolean;
   savedAvailable: boolean;
+  initialMatchup: (Matchup & { defaultSide?: "a" | "b" }) | null;
   onStart: (c: CaseConfig) => void;
   onResume: () => void;
+  onEnterTournament: () => void;
 }
 
-export default function CaseSetup({ live, savedAvailable, onStart, onResume }: Props) {
+export default function CaseSetup({
+  live,
+  savedAvailable,
+  initialMatchup,
+  onStart,
+  onResume,
+  onEnterTournament,
+}: Props) {
   const [sport, setSport] = useState("");
   const [athleteA, setAthleteA] = useState("");
   const [athleteB, setAthleteB] = useState("");
   const [side, setSide] = useState<"a" | "b" | null>(null);
+  const [sportFilter, setSportFilter] = useState<string | null>(null);
+  const [style, setStyle] = useState<DebateStyle>("balanced");
+  const [mode, setMode] = useState<DebateMode>("ai");
+  const [showHistory, setShowHistory] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [stats, setStats] = useState<StatsRecord>(EMPTY_STATS);
+
+  // These read localStorage/props seeded from the URL, which must happen
+  // after mount (not during render) to stay SSR-safe.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setStats(loadStats());
+    setShowOnboarding(!hasOnboarded());
+  }, []);
+
+  useEffect(() => {
+    if (!initialMatchup) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSport(initialMatchup.sport);
+    setAthleteA(initialMatchup.a);
+    setAthleteB(initialMatchup.b);
+    if (initialMatchup.defaultSide) setSide(initialMatchup.defaultSide);
+  }, [initialMatchup]);
 
   const ready = Boolean(sport.trim() && athleteA.trim() && athleteB.trim());
 
-  function reset() {
-    setSport("");
-    setAthleteA("");
-    setAthleteB("");
-    setSide(null);
+  function dismissOnboarding() {
+    markOnboarded();
+    setShowOnboarding(false);
   }
 
   function pickMatchup(newSport: string, a: string, b: string) {
@@ -69,7 +105,21 @@ export default function CaseSetup({ live, savedAvailable, onStart, onResume }: P
     const a = athleteA.trim();
     const b = athleteB.trim();
     const [user, ai] = side === "a" ? [a, b] : [b, a];
-    onStart({ sport: sport.trim(), userAthlete: user, aiAthlete: ai });
+    onStart({ sport: sport.trim(), userAthlete: user, aiAthlete: ai, style, mode });
+  }
+
+  async function copyChallengeLink() {
+    if (!ready) return;
+    const payload = { sport: sport.trim(), a: athleteA.trim(), b: athleteB.trim(), side };
+    const encoded = btoa(encodeURIComponent(JSON.stringify(payload)));
+    const url = `${window.location.origin}${window.location.pathname}?challenge=${encoded}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      // clipboard unavailable, nothing to do
+    }
   }
 
   const fieldClass =
@@ -77,12 +127,30 @@ export default function CaseSetup({ live, savedAvailable, onStart, onResume }: P
 
   const imgA = imageFor(sport, athleteA);
   const imgB = imageFor(sport, athleteB);
+  const visibleFeatured = sportFilter ? FEATURED.filter((r) => r.sport === sportFilter) : FEATURED;
+  const sportsInFeatured = Array.from(new Set(FEATURED.map((r) => r.sport)));
+  const totalGames = stats.wins + stats.losses;
 
   return (
     <main className="animate-screen mx-auto w-full max-w-2xl flex-1 px-4 py-12 sm:py-20">
-      <div className="flex justify-end">
-        <ThemeToggle />
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => setShowHistory(true)}
+          className="text-xs text-text-dim hover:text-text transition-colors cursor-pointer"
+        >
+          History
+        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onEnterTournament}
+            className="text-xs text-text-dim hover:text-text transition-colors cursor-pointer"
+          >
+            🏆 Tournament
+          </button>
+          <ThemeToggle />
+        </div>
       </div>
+
       <header className="text-center">
         <h1 className="font-display text-4xl font-bold tracking-tight text-text sm:text-6xl">
           <span className="text-accent">GOAT</span> Court
@@ -90,6 +158,13 @@ export default function CaseSetup({ live, savedAvailable, onStart, onResume }: P
         <p className="mt-3 text-text-dim">
           Pick two legends, argue your side, let an AI judge settle it.
         </p>
+        {totalGames > 0 && (
+          <p className="mt-2 text-xs text-text-dim">
+            You&apos;re {stats.wins}-{stats.losses} against the AI
+            {stats.streak >= 2 && ` · ${stats.streak}-win streak`}
+            {stats.streak <= -2 && ` · ${Math.abs(stats.streak)}-loss skid`}
+          </p>
+        )}
         {!live && (
           <span className="mt-3 inline-block rounded-full border border-edge px-3 py-1 text-xs text-text-dim">
             Demo mode · no API key yet
@@ -97,19 +172,59 @@ export default function CaseSetup({ live, savedAvailable, onStart, onResume }: P
         )}
       </header>
 
+      {showOnboarding && (
+        <div className="card-shadow mt-6 rounded-lg border border-accent/40 bg-accent/5 p-4 text-sm">
+          <p className="text-text">
+            New here? Pick a matchup below, choose your side, and argue why your pick is the GOAT
+            across three rounds. The AI argues back with real stats, then a judge scores it.
+          </p>
+          <button
+            onClick={dismissOnboarding}
+            className="mt-2 font-semibold text-accent hover:opacity-80 transition-opacity cursor-pointer"
+          >
+            Got it
+          </button>
+        </div>
+      )}
+
       {savedAvailable && (
         <button
           onClick={onResume}
           className="card-shadow mt-6 flex w-full items-center justify-between rounded-lg border border-accent/50 bg-accent/10 px-4 py-3 text-left transition-colors hover:bg-accent/15 cursor-pointer"
         >
-          <span className="text-sm text-text">You've got a debate in progress.</span>
+          <span className="text-sm text-text">You&apos;ve got a debate in progress.</span>
           <span className="text-sm font-semibold text-accent">Continue →</span>
         </button>
       )}
 
       <section className="mt-8">
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {FEATURED.map((r, i) => {
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            onClick={() => setSportFilter(null)}
+            className={`rounded-full border px-3 py-1 text-xs transition-colors cursor-pointer ${
+              sportFilter === null
+                ? "border-accent bg-accent/15 text-accent"
+                : "border-edge text-text-dim hover:text-text"
+            }`}
+          >
+            All sports
+          </button>
+          {sportsInFeatured.map((s) => (
+            <button
+              key={s}
+              onClick={() => setSportFilter(s)}
+              className={`rounded-full border px-3 py-1 text-xs transition-colors cursor-pointer ${
+                sportFilter === s
+                  ? "border-accent bg-accent/15 text-accent"
+                  : "border-edge text-text-dim hover:text-text"
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {visibleFeatured.map((r, i) => {
             const isSelected = sport === r.sport && athleteA === r.a && athleteB === r.b;
             return (
               <button
@@ -180,14 +295,63 @@ export default function CaseSetup({ live, savedAvailable, onStart, onResume }: P
           />
         </div>
         <p className="mt-2 text-xs text-text-dim/70">
-          Start typing for suggestions from our growing roster, or enter anyone. The AI won't invent
-          stats for players it doesn't know well.
+          {`Start typing for suggestions from our growing roster (${ALL_ATHLETES.length} players across ${SPORTS.length} sports), or enter anyone. The AI won't invent stats for players it doesn't know well.`}
         </p>
+      </section>
+
+      <section className="mt-8 grid gap-4 sm:grid-cols-2">
+        <div>
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-text-dim">AI style</h2>
+          <div className="mt-2 grid grid-cols-2 gap-1.5">
+            {STYLES.map((s) => (
+              <button
+                key={s.value}
+                onClick={() => setStyle(s.value)}
+                className={`rounded-lg border px-2.5 py-1.5 text-left text-xs transition-colors cursor-pointer ${
+                  style === s.value
+                    ? "border-accent bg-accent/10 text-accent"
+                    : "border-edge text-text-dim hover:text-text"
+                }`}
+              >
+                <p className="font-semibold">{s.label}</p>
+                <p className="text-text-dim/80">{s.blurb}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-text-dim">Opponent</h2>
+          <div className="mt-2 grid grid-cols-2 gap-1.5">
+            <button
+              onClick={() => setMode("ai")}
+              className={`rounded-lg border px-2.5 py-1.5 text-left text-xs transition-colors cursor-pointer ${
+                mode === "ai" ? "border-accent bg-accent/10 text-accent" : "border-edge text-text-dim hover:text-text"
+              }`}
+            >
+              <p className="font-semibold">🤖 The AI</p>
+              <p className="text-text-dim/80">Classic mode</p>
+            </button>
+            <button
+              onClick={() => setMode("friend")}
+              className={`rounded-lg border px-2.5 py-1.5 text-left text-xs transition-colors cursor-pointer ${
+                mode === "friend"
+                  ? "border-accent bg-accent/10 text-accent"
+                  : "border-edge text-text-dim hover:text-text"
+              }`}
+            >
+              <p className="font-semibold">👥 A friend</p>
+              <p className="text-text-dim/80">Pass the device</p>
+            </button>
+          </div>
+        </div>
       </section>
 
       {ready && (
         <section className="mt-8">
-          <div className="grid grid-cols-2 gap-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-text-dim">
+            {mode === "friend" ? "Who does Player 1 argue for?" : "Who are you riding with?"}
+          </h2>
+          <div className="mt-2 grid grid-cols-2 gap-3">
             {([["a", athleteA, imgA], ["b", athleteB, imgB]] as const).map(([key, name, img]) => (
               <button
                 key={key}
@@ -202,7 +366,7 @@ export default function CaseSetup({ live, savedAvailable, onStart, onResume }: P
                 <div className="min-w-0">
                   <p className="truncate font-display text-base font-bold text-text sm:text-lg">{name}</p>
                   <p className="truncate text-xs text-text-dim sm:text-sm">
-                    {side === key ? "You've got this side" : "Tap to argue for them"}
+                    {side === key ? "Locked in" : "Tap to argue for them"}
                   </p>
                 </div>
               </button>
@@ -222,7 +386,17 @@ export default function CaseSetup({ live, savedAvailable, onStart, onResume }: P
         <p className="mt-3 text-xs text-text-dim/70">
           3 rounds · Make your case → Clap back → Bring it home
         </p>
+        {ready && (
+          <button
+            onClick={copyChallengeLink}
+            className="mt-4 text-xs text-text-dim hover:text-accent transition-colors cursor-pointer"
+          >
+            {linkCopied ? "Link copied!" : "🔗 Copy a challenge link for a friend"}
+          </button>
+        )}
       </div>
+
+      {showHistory && <HistoryPanel onClose={() => setShowHistory(false)} />}
     </main>
   );
 }
