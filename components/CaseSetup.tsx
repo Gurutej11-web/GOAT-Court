@@ -9,8 +9,9 @@ import HistoryPanel from "@/components/HistoryPanel";
 import Dashboard from "@/components/Dashboard";
 import OddsPreview from "@/components/OddsPreview";
 import { debateOfTheDay } from "@/lib/dailyMatchup";
-import type { CaseConfig, DebateMode, DebateStyle, JudgeStyle, Matchup } from "@/lib/types";
-import { JUDGE_STYLES, STYLES } from "@/lib/types";
+import type { CaseConfig, DebateMode, DebateStyle, Matchup } from "@/lib/types";
+import { STYLES } from "@/lib/types";
+import { buildChallengeUrl } from "@/lib/challenge";
 import { hasOnboarded, loadStats, markOnboarded, type StatsRecord } from "@/lib/stats";
 
 const EMPTY_STATS: StatsRecord = { wins: 0, losses: 0, streak: 0 };
@@ -38,7 +39,6 @@ export default function CaseSetup({
   const [side, setSide] = useState<"a" | "b" | null>(null);
   const [sportFilter, setSportFilter] = useState<string | null>(null);
   const [style, setStyle] = useState<DebateStyle>("balanced");
-  const [judgeStyle, setJudgeStyle] = useState<JudgeStyle>("strict");
   const [mode, setMode] = useState<DebateMode>("ai");
   const [showHistory, setShowHistory] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
@@ -111,14 +111,17 @@ export default function CaseSetup({
     const a = athleteA.trim();
     const b = athleteB.trim();
     const [user, ai] = side === "a" ? [a, b] : [b, a];
-    onStart({ sport: sport.trim(), userAthlete: user, aiAthlete: ai, style, mode, judgeStyle });
+    onStart({ sport: sport.trim(), userAthlete: user, aiAthlete: ai, style, mode });
   }
 
   async function copyChallengeLink() {
     if (!ready) return;
-    const payload = { sport: sport.trim(), a: athleteA.trim(), b: athleteB.trim(), side };
-    const encoded = btoa(encodeURIComponent(JSON.stringify(payload)));
-    const url = `${window.location.origin}${window.location.pathname}?challenge=${encoded}`;
+    const url = buildChallengeUrl({
+      sport: sport.trim(),
+      a: athleteA.trim(),
+      b: athleteB.trim(),
+      side: side ?? undefined,
+    });
     try {
       await navigator.clipboard.writeText(url);
       setLinkCopied(true);
@@ -159,7 +162,7 @@ export default function CaseSetup({
             onClick={onEnterTournament}
             className="text-xs text-text-dim hover:text-text transition-colors cursor-pointer"
           >
-            🏆 Tournament
+            Tournament
           </button>
           <ThemeToggle />
         </div>
@@ -206,7 +209,7 @@ export default function CaseSetup({
         className="card-shadow mt-6 flex w-full items-center justify-between rounded-lg border border-edge bg-surface px-4 py-3 text-left transition-colors hover:border-accent/50 cursor-pointer"
       >
         <span className="flex items-center gap-2 text-sm text-text">
-          <span className="text-accent">⭐ Debate of the day:</span> {daily.a} vs {daily.b}
+          <span className="text-accent">Debate of the day:</span> {daily.a} vs {daily.b}
         </span>
         <span className="text-xs text-text-dim">{daily.sport}</span>
       </button>
@@ -280,7 +283,7 @@ export default function CaseSetup({
             onClick={surpriseMe}
             className="card-shadow rounded-full border border-dashed border-edge px-3.5 py-1.5 text-sm text-text-dim transition-all hover:-translate-y-0.5 hover:border-accent/50 hover:text-accent cursor-pointer"
           >
-            🎲 Surprise me
+            Surprise me
           </button>
         </div>
       </section>
@@ -352,7 +355,7 @@ export default function CaseSetup({
                 mode === "ai" ? "border-accent bg-accent/10 text-accent" : "border-edge text-text-dim hover:text-text"
               }`}
             >
-              <p className="font-semibold">🤖 The AI</p>
+              <p className="font-semibold">The AI</p>
               <p className="text-text-dim/80">Classic mode</p>
             </button>
             <button
@@ -363,30 +366,10 @@ export default function CaseSetup({
                   : "border-edge text-text-dim hover:text-text"
               }`}
             >
-              <p className="font-semibold">👥 A friend</p>
+              <p className="font-semibold">A friend</p>
               <p className="text-text-dim/80">Pass the device</p>
             </button>
           </div>
-        </div>
-      </section>
-
-      <section className="mt-4">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-text-dim">Judge style</h2>
-        <div className="mt-2 grid grid-cols-3 gap-1.5">
-          {JUDGE_STYLES.map((s) => (
-            <button
-              key={s.value}
-              onClick={() => setJudgeStyle(s.value)}
-              className={`rounded-lg border px-2.5 py-1.5 text-left text-xs transition-colors cursor-pointer ${
-                judgeStyle === s.value
-                  ? "border-accent bg-accent/10 text-accent"
-                  : "border-edge text-text-dim hover:text-text"
-              }`}
-            >
-              <p className="font-semibold">{s.label}</p>
-              <p className="text-text-dim/80">{s.blurb}</p>
-            </button>
-          ))}
         </div>
       </section>
 
@@ -437,7 +420,7 @@ export default function CaseSetup({
             onClick={copyChallengeLink}
             className="mt-4 text-xs text-text-dim hover:text-accent transition-colors cursor-pointer"
           >
-            {linkCopied ? "Link copied!" : "🔗 Copy a challenge link for a friend"}
+            {linkCopied ? "Link copied!" : "Copy a challenge link for a friend"}
           </button>
         )}
       </div>

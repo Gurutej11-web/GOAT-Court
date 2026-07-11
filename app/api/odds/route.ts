@@ -1,6 +1,14 @@
 import Groq from "groq-sdk";
-import { oddsSystem, oddsUserMessage, MODEL } from "@/lib/prompts";
+import {
+  oddsSystem,
+  oddsUserMessage,
+  verifiedOddsSystem,
+  verifiedOddsUserMessage,
+  MODEL,
+  VERIFY_MODEL,
+} from "@/lib/prompts";
 import { demoOdds } from "@/lib/demo";
+import { isKnownAthlete } from "@/lib/matchups";
 
 export const runtime = "nodejs";
 
@@ -33,6 +41,27 @@ function parseOdds(text: string): OddsResult | null {
   return null;
 }
 
+interface VerifiedOddsResult extends OddsResult {
+  verified: boolean;
+}
+
+function parseVerifiedOdds(text: string): VerifiedOddsResult | null {
+  try {
+    const v = JSON.parse(text) as VerifiedOddsResult;
+    if (
+      typeof v.verified === "boolean" &&
+      typeof v.aPct === "number" &&
+      typeof v.bPct === "number" &&
+      typeof v.blurb === "string"
+    ) {
+      return v;
+    }
+  } catch {
+    // fall through
+  }
+  return null;
+}
+
 export async function POST(req: Request) {
   let body: unknown;
   try {
@@ -50,6 +79,37 @@ export async function POST(req: Request) {
   }
 
   const client = new Groq();
+
+  // Either player is a hand-typed name outside our curated roster: verify
+  // they're real before showing any odds, using a web-search-capable model,
+  // instead of letting the fast model confidently invent a percentage split.
+  if (!isKnownAthlete(a) || !isKnownAthlete(b)) {
+    try {
+      const response = await client.chat.completions.create({
+        model: VERIFY_MODEL,
+        max_tokens: 400,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: verifiedOddsSystem() },
+          { role: "user", content: verifiedOddsUserMessage(sport, a, b) },
+        ],
+      });
+      const text = response.choices[0]?.message?.content;
+      const result = text ? parseVerifiedOdds(text) : null;
+      if (result && !result.verified) {
+        return Response.json({
+          odds: { aPct: result.aPct, bPct: result.bPct, blurb: result.blurb },
+          mode: "unverified",
+        });
+      }
+      if (result) return Response.json({ odds: result, mode: "live" });
+    } catch (err) {
+      console.error("odds verification error:", err);
+      // fall through to the demo estimate below
+    }
+    return Response.json({ odds: demoOdds(a, b), mode: "demo" });
+  }
+
   try {
     const response = await client.chat.completions.create({
       model: MODEL,

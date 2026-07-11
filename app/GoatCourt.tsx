@@ -8,6 +8,7 @@ import TournamentMode from "@/components/TournamentMode";
 import type { CaseConfig, Matchup, Phase, TranscriptEntry, Verdict } from "@/lib/types";
 import { PHASES, totalScore } from "@/lib/types";
 import { addHistoryEntry, recordResult } from "@/lib/stats";
+import { decodeChallenge } from "@/lib/challenge";
 
 type FailedStage = "counsel" | "judge" | null;
 
@@ -42,23 +43,15 @@ function persist(state: SavedState | null) {
 
 function readChallengeFromUrl(): (Matchup & { defaultSide?: "a" | "b" }) | null {
   if (typeof window === "undefined") return null;
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const encoded = params.get("challenge");
-    if (!encoded) return null;
-    const decoded = JSON.parse(decodeURIComponent(atob(encoded))) as {
-      sport: string;
-      a: string;
-      b: string;
-      side?: "a" | "b";
-    };
-    if (!decoded.sport || !decoded.a || !decoded.b) return null;
-    // The friend gets the opposite side by default, so it's you-vs-them on the same matchup.
-    const defaultSide = decoded.side === "a" ? "b" : decoded.side === "b" ? "a" : undefined;
-    return { sport: decoded.sport, a: decoded.a, b: decoded.b, defaultSide };
-  } catch {
-    return null;
-  }
+  const encoded = new URLSearchParams(window.location.search).get("challenge");
+  if (!encoded) return null;
+  const decoded = decodeChallenge(encoded);
+  if (!decoded) return null;
+  // If the link's sender picked a side, the friend gets the opposite by
+  // default, so it's you-vs-them on the same matchup. Links with no side
+  // (e.g. shared after a debate) leave the friend to pick their own.
+  const defaultSide = decoded.side === "a" ? "b" : decoded.side === "b" ? "a" : undefined;
+  return { sport: decoded.sport, a: decoded.a, b: decoded.b, defaultSide };
 }
 
 export default function GoatCourt({ live }: { live: boolean }) {

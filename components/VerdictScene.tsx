@@ -8,6 +8,7 @@ import { shareOrDownloadVerdictCard } from "@/lib/shareImage";
 import { PHASE_LABELS } from "@/lib/types";
 import type { CaseConfig, TranscriptEntry, Verdict } from "@/lib/types";
 import { totalScore } from "@/lib/types";
+import { buildChallengeUrl } from "@/lib/challenge";
 
 interface Props {
   caseConfig: CaseConfig;
@@ -27,6 +28,7 @@ export default function VerdictScene({
   onNewCase,
 }: Props) {
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const [imageState, setImageState] = useState<"idle" | "working" | "done">("idle");
   const userTotal = totalScore(verdict, "user");
   const aiTotal = totalScore(verdict, "ai");
@@ -40,6 +42,21 @@ export default function VerdictScene({
       await navigator.clipboard.writeText(summary);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // clipboard unavailable, nothing to do
+    }
+  }
+
+  async function copyReplayLink() {
+    const url = buildChallengeUrl({
+      sport: caseConfig.sport,
+      a: caseConfig.userAthlete,
+      b: caseConfig.aiAthlete,
+    });
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
     } catch {
       // clipboard unavailable, nothing to do
     }
@@ -198,13 +215,13 @@ export default function VerdictScene({
                 disabled={imageState === "working"}
                 className="rounded-lg border border-edge px-2.5 py-1 text-xs text-text-dim hover:border-accent/50 hover:text-text transition-colors disabled:opacity-50 cursor-pointer"
               >
-                {imageState === "working" ? "Making…" : imageState === "done" ? "Done!" : "📷 Share image"}
+                {imageState === "working" ? "Making…" : imageState === "done" ? "Done!" : "Share image"}
               </button>
               <button
                 onClick={exportTranscript}
                 className="rounded-lg border border-edge px-2.5 py-1 text-xs text-text-dim hover:border-accent/50 hover:text-text transition-colors cursor-pointer"
               >
-                📄 Export transcript
+                Export transcript
               </button>
             </div>
           </div>
@@ -232,6 +249,18 @@ export default function VerdictScene({
             className="rounded-xl border border-edge bg-surface px-6 py-2.5 font-display font-bold text-text hover:border-accent/50 transition-all cursor-pointer"
           >
             New matchup
+          </button>
+        </div>
+
+        <div
+          className="mt-4 text-center animate-rise"
+          style={{ animationDelay: "0.6s" }}
+        >
+          <button
+            onClick={copyReplayLink}
+            className="text-xs text-text-dim hover:text-accent transition-colors cursor-pointer"
+          >
+            {linkCopied ? "Link copied!" : "Copy a link so a friend can debate this matchup"}
           </button>
         </div>
       </main>

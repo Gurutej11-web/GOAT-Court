@@ -12,10 +12,10 @@ const NEXT: Record<Theme, Theme> = {
   contrast: "light",
 };
 
-const ICON: Record<Theme, string> = {
-  light: "🌙",
-  dark: "⚡",
-  contrast: "☀️",
+const SHORT_LABEL: Record<Theme, string> = {
+  light: "Light",
+  dark: "Dark",
+  contrast: "Contrast",
 };
 
 const LABEL: Record<Theme, string> = {
@@ -49,9 +49,9 @@ export default function ThemeToggle({ className = "" }: { className?: string }) 
       onClick={toggle}
       aria-label={LABEL[theme]}
       title={LABEL[theme]}
-      className={`flex h-8 w-8 items-center justify-center rounded-full border border-edge text-text-dim transition-colors hover:text-text cursor-pointer ${className}`}
+      className={`flex h-8 items-center justify-center rounded-full border border-edge px-3 text-xs font-medium text-text-dim transition-colors hover:text-text cursor-pointer ${className}`}
     >
-      {ICON[theme]}
+      {SHORT_LABEL[theme]}
     </button>
   );
 }

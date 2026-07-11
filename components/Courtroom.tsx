@@ -320,7 +320,7 @@ export default function Courtroom({
                 ) : (
                   <div className="mt-1 flex items-center gap-2">
                     <span className="animate-pop inline-block rounded-full border-2 border-neutral px-2 py-0.5 text-xs font-bold tracking-wide text-neutral">
-                      🔥 clapping back
+                      Clapping back
                     </span>
                     <span className="animate-pulse-soft text-sm text-text-dim">thinking…</span>
                   </div>
@@ -332,7 +332,9 @@ export default function Courtroom({
           {/* Judge deliberating */}
           {judging && (
             <article className="card-shadow animate-rise rounded-xl border border-accent/50 bg-surface p-6 text-center">
-              <span className="animate-trophy inline-block text-3xl">🏆</span>
+              <p className="animate-pulse-soft text-sm font-semibold uppercase tracking-wide text-accent">
+                Scoring
+              </p>
               <p className="mt-2 text-text">The AI judge is tallying the scores…</p>
             </article>
           )}
@@ -403,7 +405,7 @@ export default function Courtroom({
             />
             {assistTip && (
               <p className="mt-2 rounded-lg border border-accent/30 bg-accent/5 px-3 py-2 text-xs text-text">
-                💡 {assistTip}
+                {assistTip}
               </p>
             )}
             <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
@@ -430,13 +432,13 @@ export default function Courtroom({
                     onClick={toggleVoice}
                     disabled={busy}
                     aria-label="Dictate your argument"
-                    className={`rounded-lg border px-3 py-2 transition-colors cursor-pointer ${
+                    className={`rounded-lg border px-3 py-2 text-xs font-medium transition-colors cursor-pointer ${
                       listening
                         ? "border-neutral bg-neutral/15 text-neutral"
                         : "border-edge text-text-dim hover:text-text"
                     }`}
                   >
-                    {listening ? "⏹" : "🎤"}
+                    {listening ? "Stop" : "Dictate"}
                   </button>
                 )}
                 <button

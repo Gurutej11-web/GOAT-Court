@@ -59,7 +59,6 @@ export default function TournamentMode({ live, onExit }: Props) {
       aiAthlete: opponent.trim(),
       style: "balanced",
       mode: "ai",
-      judgeStyle: "strict",
     };
   }
 
@@ -243,7 +242,7 @@ export default function TournamentMode({ live, onExit }: Props) {
             >
               {won
                 ? roundIndex === ROUNDS.length - 1
-                  ? "🏆 Claim the crown"
+                  ? "Claim the crown"
                   : `Advance to the ${ROUND_LABELS[ROUNDS[roundIndex + 1]]} →`
                 : "Try again"}
             </button>
@@ -327,7 +326,7 @@ export default function TournamentMode({ live, onExit }: Props) {
       <main className="animate-screen mx-auto w-full max-w-2xl flex-1 px-4 py-12">
         <header className="text-center">
           <h1 className="font-display text-3xl font-bold text-text sm:text-4xl">
-            🏆 <span className="text-accent">Tournament</span> mode
+            <span className="text-accent">Tournament</span> mode
           </h1>
           <p className="mt-3 text-text-dim">
             Pick your champion and three opponents. Beat them all, back to back, quarterfinal to

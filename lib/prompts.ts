@@ -1,7 +1,9 @@
-import type { CaseConfig, DebateStyle, JudgeStyle, Phase, TranscriptEntry } from "./types";
+import type { CaseConfig, DebateStyle, Phase, TranscriptEntry } from "./types";
 import { PHASE_LABELS } from "./types";
 
 export const MODEL = process.env.GOAT_MODEL || "llama-3.3-70b-versatile";
+/** Groq's web-search-capable system, used only to check whether a hand-typed athlete is real. */
+export const VERIFY_MODEL = process.env.GOAT_VERIFY_MODEL || "groq/compound";
 
 const STYLE_TONE: Record<DebateStyle, string> = {
   balanced: "Confident and fair, hyped up but not over the top.",
@@ -10,15 +12,6 @@ const STYLE_TONE: Record<DebateStyle, string> = {
     "No mercy. Aggressive and cutting toward the other side's ARGUMENT (never toward the other debater personally). Dismantle weak points hard.",
   stats:
     "A stats-obsessed nerd. Lean even harder into numbers than usual, treat this like a spreadsheet argument, cite more specific figures.",
-};
-
-const JUDGE_TONE: Record<JudgeStyle, string> = {
-  strict:
-    "You're a tough grader. High bar for what counts as a strong argument. Vague claims or thin evidence should score low, even if delivered confidently.",
-  generous:
-    "You reward effort and heart. A well-intentioned argument with a couple of real stats should score reasonably well, even if it's not airtight.",
-  statistical:
-    "You care almost entirely about the density and accuracy of real statistics cited. Rhetorical flair barely matters; count the receipts.",
 };
 
 function sideLabels(c: CaseConfig): { user: string; ai: string } {
@@ -72,7 +65,7 @@ export function judgeSystem(c: CaseConfig): string {
   const labels = sideLabels(c);
   return `You're the AI judge for GOAT Court. The debate: who's the greatest ${c.sport} player ever, ${c.userAthlete} (argued by ${labels.user}) or ${c.aiAthlete} (argued by ${labels.ai})?
 
-Judging temperament: ${JUDGE_TONE[c.judgeStyle] ?? JUDGE_TONE.strict}
+Judging temperament: fair but exacting. Reward real stats and sharp logic; vague claims or thin evidence should score low even if delivered confidently. Effort alone doesn't win a round, evidence does.
 
 Read the full debate below and score it. Respond with ONLY a JSON object, no other text, shaped exactly like this:
 {
@@ -118,6 +111,32 @@ Respond with ONLY a JSON object, no other text:
 
 export function oddsUserMessage(sport: string, a: string, b: string): string {
   return `Sport: ${sport}. Matchup: ${a} vs ${b}. Give the odds JSON.`;
+}
+
+/**
+ * Used only when a player isn't in our curated database, via a web-search-capable
+ * model (VERIFY_MODEL), so odds are never confidently fabricated for someone who
+ * may not exist or may not play the named sport.
+ */
+export function verifiedOddsSystem(): string {
+  return `You're a sports-debate oddsmaker for GOAT Court. You have live web search. You'll be given a sport and two names that aren't in our curated database, so verify them yourself before estimating anything.
+
+Steps:
+1. Search the web to confirm each name is a real person known for competing in the given sport, at any level of fame, amateur or pro, as long as they're a real athlete in that sport.
+2. If either name can't be confirmed as a real athlete in that sport, set "verified" to false. Don't guess odds for someone you can't confirm.
+3. If both are confirmed, estimate a rough public-opinion split for who'd usually be argued as the greater player, grounded in what you actually found, not a guess.
+
+Respond with ONLY a JSON object, no other text:
+{
+  "verified": <true or false>,
+  "aPct": <integer 1-99, the % leaning toward the first player if verified, otherwise 50>,
+  "bPct": <integer, 100 - aPct>,
+  "blurb": "<if verified, one punchy sentence on why opinion leans that way; if not verified, one short honest sentence naming which player you couldn't confirm, no em dashes>"
+}`;
+}
+
+export function verifiedOddsUserMessage(sport: string, a: string, b: string): string {
+  return `Sport: ${sport}. Matchup: ${a} vs ${b}. Verify both are real ${sport ? `${sport} ` : ""}athletes, then give the odds JSON.`;
 }
 
 export function coachSystem(): string {
